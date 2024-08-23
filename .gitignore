@@ -1,0 +1,9 @@
+# General
+__pycache__
+
+# Output files
+*.log
+data
+results
+
+
