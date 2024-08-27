@@ -13,9 +13,9 @@ QoI_HF_name = 'max_osi_sten_lad'
 base_path = "./"
 base_path = os.path.abspath(base_path)
 
-parameters_file = base_path + "/../simulations/all_param_values.json"
-all_0d_data_file = base_path + "/../simulations/all_0d_data.json"
-all_3d_data_file = base_path + "/../simulations/all_3d_data.json"
+parameters_file = base_path + "/simulations/all_param_values.json"
+all_0d_data_file = base_path + "/simulations/all_0d_data.json"
+all_3d_data_file = base_path + "/simulations/all_3d_data.json"
 
 # Options
 plot = True
@@ -35,13 +35,14 @@ elif len(trial_files) > 1:
 
 for trial_idx in range(repeated_trials):
 
-    # Read data
     if (repeated_trials > 1):
         print("\n Trial: "  +str(trial_idx))
         trial_idx_str = "_"+str(trial_idx).zfill(4)
     else:
         trial_idx_str = ""
-    new_0d_data_file = base_path + "/results/all_0d_data_AE"+trial_idx_str+".json"
+    
+    # Read data
+    new_0d_data_file = base_path + "/simulations/all_0d_data_AE"+trial_idx_str+".json"
     samples, parameters, QoI_LF, QoI_HF, _, new_QoI_LF_AE, _, _ = read_simulation_data(QoI_LF_name, QoI_HF_name, parameters_file, all_0d_data_file, all_3d_data_file, None, new_0d_data_file)
     num_samples = len(samples)
 
