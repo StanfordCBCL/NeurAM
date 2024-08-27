@@ -6,10 +6,10 @@ from help_functions import read_simulation_data
 
 def write_normalized_data(base_path, QoI_LF_name, QoI_HF_name, num_pilot_samples_to_use, trial_name_str = ""):
 
-    parameters_file = base_path + "/simulation_data/all_param_values.json"
-    all_0d_data_file = base_path + "/simulation_data/all_0d_data.json"
-    all_3d_data_file = base_path + "/simulation_data/all_3d_data.json"
-    parameters_file_propagation = base_path + "/simulation_data/all_param_values_propagation.json"
+    parameters_file = base_path + "/simulations/all_param_values.json"
+    all_0d_data_file = base_path + "/simulations/all_0d_data.json"
+    all_3d_data_file = base_path + "/simulations/all_3d_data.json"
+    parameters_file_propagation = base_path + "/simulations/all_param_values_propagation.json"
 
     # Read data
 
