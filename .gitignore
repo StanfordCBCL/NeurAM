@@ -1,8 +1,9 @@
 # General
 __pycache__
+*.swp
 
 # Output files
 *.log
-results
+results*
 
 

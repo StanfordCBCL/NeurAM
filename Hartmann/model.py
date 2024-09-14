@@ -1,11 +1,5 @@
-# -*- coding: utf-8 -*-
-
-#%% Moduels
-
 import torch
 import numpy as np
-
-#%% Models
 
 def get_model(name):
     
@@ -34,6 +28,10 @@ def get_model(name):
         g = lambda y: y[2]*(1/(2*y[4]))*(1 - 2*(torch.sqrt(y[3]*y[0])/y[4])*(torch.sinh(y[4]/torch.sqrt(4*y[3]*y[0]))/torch.cosh(y[4]/torch.sqrt(4*y[3]*y[0])))) if y.ndim==1 else \
                       y[:,2]*(1/(2*y[:,4]))*(1 - 2*(torch.sqrt(y[:,3]*y[:,0])/y[:,4])*(torch.sinh(y[:,4]/torch.sqrt(4*y[:,3]*y[:,0]))/torch.cosh(y[:,4]/torch.sqrt(4*y[:,3]*y[:,0]))))
 
+    else:
+
+        raise RuntimeError('ERROR: Invalid QoI name.')
+    
     f = lambda x: g(omega(x))
         
     return d, f
