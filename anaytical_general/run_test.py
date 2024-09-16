@@ -31,6 +31,9 @@ hyperparameter_tuning = False
 # Path to a .py file which includes a get_model() function for the HF and LF models
 analytical_example_path = "../Hartmann/"
 
+# Path to location for outputs/results
+base_path = "./"
+
 # Names of QoIs
 name_HF = "Hartmann_flow_velocity"
 name_LF = "Hartmann_magnetic_field"
@@ -47,7 +50,7 @@ spec.loader.exec_module(analytical_example)
 
 if use_random_seed:
     torch.manual_seed(use_random_seed)
-    torch.set_default_tensor_type(torch.DoubleTensor)
+torch.set_default_tensor_type(torch.DoubleTensor)
 
 # Get dimensionality and model
 d, f_HF = analytical_example.get_model(name_HF)
@@ -177,29 +180,29 @@ for i in range(iterations):
 
 if save:
     
-    if not os.path.exists("./results"):
-        os.mkdir("./results")
-    if not os.path.exists("./results/" + name_HF):
-        os.mkdir("./results/" + name_HF)
-    if not os.path.exists("./results/" + name_LF):
-        os.mkdir("./results/" + name_LF)
+    if not os.path.exists(base_path + "/results"):
+        os.mkdir(base_path+"/results")
+    if not os.path.exists(base_path + "/results/" + name_HF):
+        os.mkdir(base_path + "/results/" + name_HF)
+    if not os.path.exists(base_path + "/results/" + name_LF):
+        os.mkdir(base_path + "/results/" + name_LF)
         
-    np.savetxt("results/MC.txt", MC)
-    np.savetxt("results/MFMC.txt", MFMC)
-    np.savetxt("results/MFMC_AE.txt", MFMC_AE)
-    np.savetxt("results/rho.txt", rho)
-    np.savetxt("results/rho_AE.txt", rho_AE)
-    np.savetxt("results/rho_AE_ideal.txt", rho_AE_ideal)
+    np.savetxt(base_path + "/results/MC.txt", MC)
+    np.savetxt(base_path + "/results/MFMC.txt", MFMC)
+    np.savetxt(base_path + "/results/MFMC_AE.txt", MFMC_AE)
+    np.savetxt(base_path + "/results/rho.txt", rho)
+    np.savetxt(base_path + "/results/rho_AE.txt", rho_AE)
+    np.savetxt(base_path + "/results/rho_AE_ideal.txt", rho_AE_ideal)
     
-    np.savetxt("results/" + name_HF + "/hyperparameters_HF.txt", np.array([layers_AE_HF, neurons_AE_HF, layers_surrogate_HF, neurons_surrogate_HF]).astype(int), fmt='%i')
-    np.savetxt("results/" + name_HF + "/MSE_reduced_HF.txt", MSE_reduced_HF)
-    np.savetxt("results/" + name_HF + "/MSE_reduced_surrogate_HF.txt", MSE_reduced_surrogate_HF)
-    np.savetxt("results/" + name_HF + "/MAE_reduced_HF.txt", MAE_reduced_HF)
-    np.savetxt("results/" + name_HF + "/MAE_reduced_surrogate_HF.txt", MAE_reduced_surrogate_HF)
+    np.savetxt(base_path + "/results/" + name_HF + "/hyperparameters_HF.txt", np.array([layers_AE_HF, neurons_AE_HF, layers_surrogate_HF, neurons_surrogate_HF]).astype(int), fmt='%i')
+    np.savetxt(base_path + "/results/" + name_HF + "/MSE_reduced_HF.txt", MSE_reduced_HF)
+    np.savetxt(base_path + "/results/" + name_HF + "/MSE_reduced_surrogate_HF.txt", MSE_reduced_surrogate_HF)
+    np.savetxt(base_path + "/results/" + name_HF + "/MAE_reduced_HF.txt", MAE_reduced_HF)
+    np.savetxt(base_path + "/results/" + name_HF + "/MAE_reduced_surrogate_HF.txt", MAE_reduced_surrogate_HF)
     
-    np.savetxt("results/" + name_LF + "/hyperparameters_LF.txt", np.array([layers_AE_LF, neurons_AE_LF, layers_surrogate_LF, neurons_surrogate_LF]).astype(int), fmt='%i')
-    np.savetxt("results/" + name_LF + "/MSE_reduced_LF.txt", MSE_reduced_LF)
-    np.savetxt("results/" + name_LF + "/MSE_reduced_surrogate_LF.txt", MSE_reduced_surrogate_LF)
-    np.savetxt("results/" + name_LF + "/MAE_reduced_LF.txt", MAE_reduced_LF)
-    np.savetxt("results/" + name_LF + "/MAE_reduced_surrogate_LF.txt", MAE_reduced_surrogate_LF)
+    np.savetxt(base_path + "/results/" + name_LF + "/hyperparameters_LF.txt", np.array([layers_AE_LF, neurons_AE_LF, layers_surrogate_LF, neurons_surrogate_LF]).astype(int), fmt='%i')
+    np.savetxt(base_path + "/results/" + name_LF + "/MSE_reduced_LF.txt", MSE_reduced_LF)
+    np.savetxt(base_path + "/results/" + name_LF + "/MSE_reduced_surrogate_LF.txt", MSE_reduced_surrogate_LF)
+    np.savetxt(base_path + "/results/" + name_LF + "/MAE_reduced_LF.txt", MAE_reduced_LF)
+    np.savetxt(base_path + "/results/" + name_LF + "/MAE_reduced_surrogate_LF.txt", MAE_reduced_surrogate_LF)
     
