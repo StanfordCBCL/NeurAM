@@ -2,7 +2,7 @@
     "model_type" : "function",
     "number_of_training_samples" : 1000,
     "number_of_testing_samples" : 1000,
-    "number_of_iterations" : 10,
+    "number_of_iterations" : 3,
     "epochs" : 10000,
     "random_seed" : 2024,
     "save" : true,
