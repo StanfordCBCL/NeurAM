@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-
-#%% Modules 
-
 import torch
 from tqdm import tqdm
 import matplotlib.pyplot as plt
@@ -10,7 +6,9 @@ from sklearn.model_selection import train_test_split
 import os
 import numpy as np
 
-#%% Autoencoder and surrogate model
+# -------------------------------
+# Autoencoder and surrogate model
+# -------------------------------
 
 def compute_reduction(d, data, f_data, r, activation, layers_AE, neurons_AE, layers_surrogate, neurons_surrogate, epochs, show=True, X_test=None, Y_test=None):
 
@@ -98,9 +96,11 @@ def compute_reduction(d, data, f_data, r, activation, layers_AE, neurons_AE, lay
     
     return autoencoder, surrogate, losses[1][-1]
 
-#%% Hyperparameter tuning
+# -------------------------------
+# Hyperparameter tuning
+# -------------------------------
 
-def tune_hyperparameter(d, data, f_data, r, activation, layers_max, neurons_max, epochs, k_splits, max_evals, name):
+def tune_hyperparameters(d, data, f_data, r, activation, layers_max, neurons_max, epochs, k_splits, max_evals, name):
     
     k = 1/k_splits
     hyperparameters = {}
@@ -141,7 +141,9 @@ def tune_hyperparameter(d, data, f_data, r, activation, layers_max, neurons_max,
 
     return hyperparameters
 
-#%% Multifidelity Monte Carlo
+# -------------------------------------------------------------
+# Find normalizing flow using cumulative density function (CDF)
+# -------------------------------------------------------------
 
 def find_CDF(data):
 
@@ -150,12 +152,20 @@ def find_CDF(data):
 
     return F, Finv
 
+# -------------------------------
+# Monte Carlo estimator
+# -------------------------------
+
 def compute_MC(f, d, B):
     
     samples = 2*torch.rand((B, d)) - 1
     MC = torch.mean(f(samples))
 
     return MC.item()
+
+# -----------------------------------
+# Multifidelity Monte Carlo estimator
+# -----------------------------------
 
 def compute_MFMC(f_HF, f_LF, d, B, w):
     

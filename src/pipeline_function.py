@@ -1,66 +1,46 @@
-#!/usr/bin/env python3
-
 import numpy as np
 import torch
-import argparse
 import os
-from help_functions import tune_hyperparameter, compute_reduction, find_CDF, compute_MC, compute_MFMC
+from utils_model_function import tune_hyperparameters, compute_reduction, find_CDF, compute_MC, compute_MFMC
 import importlib.util
 import sys
 import json
 
+# ----------------------------
 
+def read_json_entry(config, key, default = None):
+    
+    if default == None:
+        try:
+            value = config[key]
+        except KeyError:
+            raise RuntimeError("{} is a required entry in the JSON configuration file.".format(key))
+    else:
+        value = config.get(key, default)
 
-#   parser = argparse.ArgumentParser()
-#   parser.add_argument('--N', type=int, default=1000, help="Number of data")
-#   args = parser.parse_args()
-#   N = args.N # Number of training samples
+    return value
 
-#   use_random_seed = 2024
-#   iterations = 2
-#   M = 1000 # Number of testing samples
-#   cost_ratio = 0.01 # Ratio of LF:HF cost
-#   r = 1 # Reduced dimension
-#   epochs = 10000
-#   activation = torch.nn.Tanh()
+# ----------------------------
 
-#   save = True
-#   hyperparameter_tuning = False
-
-#   # Path to a .py file which includes a get_model() function for the HF and LF models
-#   analytical_example_path = "../Hartmann/"
-
-#   # Path to location for outputs/results
-#   base_path = "./"
-
-#   # Names of QoIs
-#   name_HF = "Hartmann_flow_velocity"
-#   name_LF = "Hartmann_magnetic_field"
-
-def run_using_model(config):
+def run_using_function(config):
 
     # -------------------------------
     # User inputs
     # -------------------------------
 
-#   parser = argparse.ArgumentParser()
-#   parser.add_argument('input_file', help="Configuration file in JSON format")
-#   args = parser.parse_args()
-#   with open(args.input_file) as f:
-#       config = json.load(f)
-
-    N = config["number_of_training_samples"]
-    M = config["number_of_testing_samples"]
-    use_random_seed = config["random_seed"]
-    iterations = config["number_of_iterations"]
-    cost_ratio = config["model"]["cost_ratio"]
-    r = config["reduced_dimension"]
-    epochs = config["epochs"]
-    save = config["save"]
-    hyperparameter_tuning = config["hyperparameter_tuning"]
-    analytical_example_path = config["model"]["model_path"]
-    name_HF = config["model"]["HF_QoI_name"]
-    name_LF = config["model"]["LF_QoI_name"]
+    N = read_json_entry(config, "number_of_training_samples")
+    M = read_json_entry(config, "number_of_testing_samples")
+    use_random_seed = read_json_entry(config, "random_seed", False)
+    iterations = read_json_entry(config, "number_of_iterations", 1)
+    epochs = read_json_entry(config, "epochs")
+    save = read_json_entry(config, "save", True)
+    hyperparameter_tuning = read_json_entry(config, "hyperparameter_tuning", False)
+    analytical_example_path = read_json_entry(config["model"], "model_path")
+    name_HF = read_json_entry(config["model"], "HF_QoI_name")
+    name_LF = read_json_entry(config["model"], "LF_QoI_name")
+    cost_ratio = read_json_entry(config["model"], "cost_ratio")
+    
+    r = 1 # Reduced dimension 
     base_path = "./"
     activation = torch.nn.Tanh()
 
@@ -97,9 +77,35 @@ def run_using_model(config):
         max_evals = 100
         layers_max = 4
         neurons_max = 16
-        hyperparameters_HF = tune_hyperparameter(d, data, f_data_HF, r, activation, layers_max, neurons_max, epochs, k_splits, max_evals, name_HF)
-        hyperparameters_LF = tune_hyperparameter(d, data, f_data_LF, r, activation, layers_max, neurons_max, epochs, k_splits, max_evals, name_LF)
         
+        if hyperparameter_tuning == 1:
+            # Tune hyperparameters
+            hyperparameters_HF = tune_hyperparameters(d, data, f_data_HF, r, activation, layers_max, neurons_max, epochs, k_splits, max_evals, name_HF)
+            hyperparameters_LF = tune_hyperparameters(d, data, f_data_LF, r, activation, layers_max, neurons_max, epochs, k_splits, max_evals, name_LF)
+
+            # Write tuned hyperparameters to a .json file
+            hyperparameters = {}
+            hyperparameters["HF"] = hyperparameters_HF
+            hyperparameters["LF"] = hyperparameters_LF
+            with open(base_path+'hyperparameters.json', 'w') as f:
+                json.dump(hyperparameters, f, indent=4)
+        
+        elif isinstance(hyperparameter_tuning, str):
+            # Read tuned hyperparameters from a file
+            with open(hyperparameter_tuning) as f:
+                hyperparameters = json.load(f)
+            hyperparameters_HF = hyperparameters["HF"]
+            hyperparameters_LF = hyperparameters["LF"]
+
+
+#           hyperparameters = dict((line.split(':')[0], float(line.split(':')[1])) for line in open(hyperparameter_tuning))
+#           # Convert below parameters to int
+#           for key in ['layers_surrogate', 'neurons_surrogate', 'layers_AE', 'neurons_AE']:
+#               hyperparameters[key] = int(hyperparameters.get(key))
+
+        else:
+            raise RuntimeError("ERROR: Invalid input for hyperparameter_tuning. Should be True/False or .json filename with saved hyperparameters.")
+
         layers_AE_HF = hyperparameters_HF['layers_AE']
         neurons_AE_HF = hyperparameters_HF['neurons_AE']
         layers_surrogate_HF = hyperparameters_HF['layers_surrogate']

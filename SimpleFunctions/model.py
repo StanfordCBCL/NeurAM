@@ -1,16 +1,5 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Mar 21 12:22:44 2024
-
-@author: andre
-"""
-
-#%% Moduels
-
 import torch
 import numpy as np
-
-#%% Models
 
 def get_model(name):
         

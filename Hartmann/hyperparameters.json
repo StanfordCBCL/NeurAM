@@ -1,0 +1,14 @@
+{
+    "HF": {
+        "layers_AE": 2,
+        "neurons_AE": 16,
+        "layers_surrogate": 2,
+        "neurons_surrogate": 12
+    },
+    "LF": {
+        "layers_AE": 4,
+        "neurons_AE": 14,
+        "layers_surrogate": 3,
+        "neurons_surrogate": 6
+    }
+}

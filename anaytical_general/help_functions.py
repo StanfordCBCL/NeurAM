@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-
-#%% Modules 
-
 import torch
 from tqdm import tqdm
 import matplotlib.pyplot as plt
@@ -10,7 +6,7 @@ from sklearn.model_selection import train_test_split
 import os
 import numpy as np
 
-#%% Autoencoder and surrogate model
+# Autoencoder and surrogate model
 
 def compute_reduction(d, data, f_data, r, activation, layers_AE, neurons_AE, layers_surrogate, neurons_surrogate, epochs, show=True, X_test=None, Y_test=None):
 
@@ -98,7 +94,7 @@ def compute_reduction(d, data, f_data, r, activation, layers_AE, neurons_AE, lay
     
     return autoencoder, surrogate, losses[1][-1]
 
-#%% Hyperparameter tuning
+# Hyperparameter tuning
 
 def tune_hyperparameter(d, data, f_data, r, activation, layers_max, neurons_max, epochs, k_splits, max_evals, name):
     
@@ -141,7 +137,7 @@ def tune_hyperparameter(d, data, f_data, r, activation, layers_max, neurons_max,
 
     return hyperparameters
 
-#%% Multifidelity Monte Carlo
+# Multifidelity Monte Carlo
 
 def find_CDF(data):
 
