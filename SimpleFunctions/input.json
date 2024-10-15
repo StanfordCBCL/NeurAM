@@ -1,7 +1,5 @@
 {
     "model_type" : "function",
-    "number_of_training_samples" : 1000,
-    "number_of_testing_samples" : 1000,
     "number_of_iterations" : 100,
     "epochs" : 10000,
     "random_seed" : 2024,
@@ -9,6 +7,8 @@
     "hyperparameter_tuning" : true,
     "model" : {
         "model_path" : "./",
+        "number_of_training_samples" : 1000,
+        "number_of_testing_samples" : 1000,
         "HF_QoI_name" : "Q_HF",
         "LF_QoI_name" : "Q_LF",
         "cost_ratio" : 0.01

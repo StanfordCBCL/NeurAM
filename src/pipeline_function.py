@@ -5,20 +5,7 @@ from utils_model_function import tune_hyperparameters, compute_reduction, find_C
 import importlib.util
 import sys
 import json
-
-# ----------------------------
-
-def read_json_entry(config, key, default = None):
-    
-    if default == None:
-        try:
-            value = config[key]
-        except KeyError:
-            raise RuntimeError("{} is a required entry in the JSON configuration file.".format(key))
-    else:
-        value = config.get(key, default)
-
-    return value
+from utils_general import read_json_entry
 
 # ----------------------------
 
@@ -28,14 +15,15 @@ def run_using_function(config):
     # User inputs
     # -------------------------------
 
-    N = read_json_entry(config, "number_of_training_samples")
-    M = read_json_entry(config, "number_of_testing_samples")
     use_random_seed = read_json_entry(config, "random_seed", False)
     iterations = read_json_entry(config, "number_of_iterations", 1)
     epochs = read_json_entry(config, "epochs")
     save = read_json_entry(config, "save", True)
     hyperparameter_tuning = read_json_entry(config, "hyperparameter_tuning", False)
+    
     analytical_example_path = read_json_entry(config["model"], "model_path")
+    N = read_json_entry(config["model"], "number_of_training_samples")
+    M = read_json_entry(config["model"], "number_of_testing_samples")
     name_HF = read_json_entry(config["model"], "HF_QoI_name")
     name_LF = read_json_entry(config["model"], "LF_QoI_name")
     cost_ratio = read_json_entry(config["model"], "cost_ratio")

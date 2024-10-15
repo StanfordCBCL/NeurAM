@@ -1,7 +1,5 @@
 {
     "model_type" : "function",
-    "number_of_training_samples" : 1000,
-    "number_of_testing_samples" : 1000,
     "number_of_iterations" : 3,
     "epochs" : 10000,
     "random_seed" : 2024,
@@ -9,6 +7,8 @@
     "hyperparameter_tuning" : "hyperparameters.json",
     "model" : {
         "model_path" : "./",
+        "number_of_training_samples" : 1000,
+        "number_of_testing_samples" : 1000,
         "HF_QoI_name" : "Hartmann_flow_velocity",
         "LF_QoI_name" : "Hartmann_magnetic_field",
         "cost_ratio" : 0.01
