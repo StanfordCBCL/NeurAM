@@ -297,6 +297,9 @@ def run_using_data(config):
         else:
             data_g_reduced = model_g.decode(T_g(T_inverse_f(model_f.encode(f_data))[:,p_max])).detach().numpy()
 
+        # -------------------------------
+        # Save data
+        # -------------------------------
         if save:
             if p_max == 0:
                 data_g_reduced_propagation = model_g.decode(T_g(T_inverse_f(model_f.encode(data_propagation)))).detach().numpy()
@@ -316,15 +319,31 @@ def run_using_data(config):
             write_unnormalized_data(base_path, config_string, trial_idx_str)
 
             # Save autoencoders and surrogate models
-            if not os.path.exists(base_path + "/results/models"):
-                os.mkdir(base_path + "/results/models")
-
             if not load_NN_models:
                 if together:
                     torch.save(model_state_dict, base_path + "/results/NN_models.pt")
                 else:
                     torch.save(model_state_dict_HF, base_path + "/results/NN_models_HF.pt")
                     torch.save(model_state_dict_LF, base_path + "/results/NN_models_LF.pt")
+
+            # Save loss history
+            if not os.path.exists(base_path + "/results/losses"):
+                os.mkdir(base_path + "/results/losses")
+            
+            if together:
+                # Losses for the second stage where HF and LF are trained together
+                np.savetxt(base_path + "/results/losses/test_loss.dat", np.asarray(loss[0]))
+                np.savetxt(base_path + "/results/losses/train_loss.dat", np.asarray(loss[1]))
+                if sequential:
+                    np.savetxt(base_path + "/results/losses/train_loss_HF.dat", np.asarray(loss[2][0]))
+                    np.savetxt(base_path + "/results/losses/test_loss_HF.dat", np.asarray(loss[2][1]))
+                    np.savetxt(base_path + "/results/losses/train_loss_LF.dat", np.asarray(loss[3][0]))
+                    np.savetxt(base_path + "/results/losses/test_loss_LF.dat", np.asarray(loss[3][1]))
+            else:
+                np.savetxt(base_path + "/results/losses/test_loss_HF.dat", np.asarray(loss_f[0]))
+                np.savetxt(base_path + "/results/losses/train_loss_HF.dat", np.asarray(loss_f[1]))
+                np.savetxt(base_path + "/results/losses/test_loss_LF.dat", np.asarray(loss_g[0]))
+                np.savetxt(base_path + "/results/losses/train_loss_LF.dat", np.asarray(loss_g[1]))
 
         # --------------------------------------
         # Compute new correlation b/w HF and LF 
@@ -360,4 +379,4 @@ def run_using_data(config):
     print("Please find the new resampled inputs (parameters) for the propagation samples in " + base_path + "/results/new_parameters_propagation_LF_AE"+config_string+trial_idx_str + ".csv")
     print("The simulation data should be stored in the same format as the outputs from the original pilot/propagation samples.")
     print("--------------------------------------------------------------------")
-    print("--------------------------------------------------------------------")
+    print("--------------------------------------------------------------------\n")

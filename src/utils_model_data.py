@@ -129,8 +129,14 @@ def find_surrogate_reduced_model(X, Y, name, dim_reduced, activation, layers_sur
 def find_surrogate_reduced_correlated_models_invCDF(X_f, X_g, Y_f, Y_g, name, dim_reduced, activation, layers_surrogate, neurons_surrogate, layers_AE, neurons_AE, lr, gamma, alpha, epochs, sequential, show=True, X_f_test=None, X_g_test=None, Y_f_test=None, Y_g_test=None):
 
     if sequential:
-        _, model_f, _, surrogate_f = find_surrogate_reduced_model(X_f, Y_f, 'together_f', dim_reduced, activation, layers_surrogate, neurons_surrogate, layers_AE, neurons_AE, lr, gamma, epochs, show, X_test=X_f_test, Y_test=Y_f_test, return_surrogate_NN=True)  
-        _, model_g, _, surrogate_g = find_surrogate_reduced_model(X_g, Y_g, 'together_g', dim_reduced, activation, layers_surrogate, neurons_surrogate, layers_AE, neurons_AE, lr, gamma, epochs, show, X_test=X_g_test, Y_test=Y_g_test, return_surrogate_NN=True)  
+        _, model_f, losses_f, surrogate_f = find_surrogate_reduced_model(X_f, Y_f, 'together_f', dim_reduced, activation, 
+                layers_surrogate, neurons_surrogate, layers_AE, neurons_AE, lr, gamma, epochs, show, 
+                X_test=X_f_test, Y_test=Y_f_test, return_surrogate_NN=True)  
+        _, model_g, losses_g, surrogate_g = find_surrogate_reduced_model(X_g, Y_g, 'together_g', dim_reduced, activation, 
+                layers_surrogate, neurons_surrogate, layers_AE, neurons_AE, lr, gamma, epochs, show, 
+                X_test=X_g_test, Y_test=Y_g_test, return_surrogate_NN=True)  
+        losses = [[], [], losses_f, losses_g]
+
     else:
         _, dim_f = X_f.shape
         _, dim_g = X_g.shape
@@ -139,12 +145,12 @@ def find_surrogate_reduced_correlated_models_invCDF(X_f, X_g, Y_f, Y_g, name, di
         model_g = Autoencoder(layers_AE, neurons_AE, dim_g, dim_reduced, activation)
         surrogate_f = Surrogate_NN(layers_surrogate, neurons_surrogate, dim_reduced, activation)
         surrogate_g = Surrogate_NN(layers_surrogate, neurons_surrogate, dim_reduced, activation)
+        losses = [[], []]
     
     optimizer = torch.optim.Adam(list(model_f.parameters()) + list(model_g.parameters()) + list(surrogate_f.parameters()) + list(surrogate_g.parameters()), lr=lr)
     scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma)
     loss_function = torch.nn.MSELoss()
     loss_pearson = torchmetrics.PearsonCorrCoef()
-    losses = [[], []]
 
     for epoch in tqdm(range(epochs), disable = not show):
 
@@ -170,7 +176,7 @@ def find_surrogate_reduced_correlated_models_invCDF(X_f, X_g, Y_f, Y_g, name, di
                + loss_function(model_g(reconstructed_g), reconstructed_g) \
                - alpha*abs(loss_pearson(Y_f, torch.squeeze(surrogate_g(model_g.encoder(model_g.decoder(T_g(T_inverse_f(data_reduced_f))))))))
         
-        losses[0].append(loss.item())
+        losses[0].append(loss.item() + alpha)
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
@@ -199,7 +205,8 @@ def find_surrogate_reduced_correlated_models_invCDF(X_f, X_g, Y_f, Y_g, name, di
                           + loss_function(torch.squeeze(surrogate_g(model_g.encoder(reconstructed_g_test))), torch.squeeze(surrogate_g(model_g.encoder(X_g_test)))) \
                           + loss_function(model_g(reconstructed_g_test), reconstructed_g_test) \
                           - alpha*abs(loss_pearson(Y_f_test, torch.squeeze(surrogate_g(model_g.encoder(model_g.decoder(T_g_test(T_inverse_f_test(data_reduced_f_test))))))))).item()
-                          
+            
+            loss_output += alpha
         else:
             loss_output = losses[0][-1]
         losses[1].append(loss_output)
