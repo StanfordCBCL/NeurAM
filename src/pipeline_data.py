@@ -1,11 +1,11 @@
 import numpy as np
 import torch
-from utils_model_data import find_surrogate_reduced_model, find_surrogate_reduced_correlated_models_invCDF, tune_hyperparameter
+from utils_model_data import find_surrogate_reduced_model, find_surrogate_reduced_correlated_models_invCDF, tune_hyperparameters
+from utils_model_data import load_surrogate_reduced_model, load_surrogate_reduced_correlated_models_invCDF
 from utils_model_data import find_normalizing_flow, find_normalizing_flow_1D, find_normalizing_flow_spline, find_normalizing_flow_invCDF
 from utils_model_data import write_normalized_data, write_unnormalized_data
 from itertools import permutations
 import os
-#import argparse
 from utils_general import read_json_entry                             
 
 # -------------------------------
@@ -36,70 +36,20 @@ def run_using_data(config):
     # Number of pilot samples to use for constructing shared space and surrogate model
     # Positive integer: Use specified number of samples OR -1: Use all samples
     num_pilot_samples_to_use = read_json_entry(config["model"], "num_pilot_samples", -1)
+    # Type of normalizing flow. Default is inverse CDF
+    flow_type = read_json_entry(config["model"], "normalizing_flow_type", "invCDF")
+    cost_ratio = read_json_entry(config["model"], "cost_ratio")
+    # Train models or load saved models? Either False or a string with path to the saved models "NN_models*.pt"
+    load_NN_models = read_json_entry(config["model"], "load_NN_models", False)
     # Train HF and LF models together?
     together = read_json_entry(config["model"], "train_together", True)
     # Train sequentially, i.e. first train LF and HF models separately and initialize with those weights when training them together. 
     # Default value is true - works much better than directly training HF and LF models together
     sequential = read_json_entry(config["model"], "train_sequentially", True)
-    # Type of normalizing flow. Default is inverse CDF
-    flow_type = read_json_entry(config["model"], "normalizing_flow_type", "invCDF")
-    cost_ratio = read_json_entry(config["model"], "cost_ratio")
 
     # Path to location for outputs/results
     base_path = "./"
     activation = torch.nn.Tanh()
-
-
-
-#   # -------------------------------
-#   # User inputs
-#   # -------------------------------
-
-#   parser = argparse.ArgumentParser()
-
-#   parser.add_argument('--DR', type=int, default=1, help="Reduced dimension")
-#   parser.add_argument('--FT', type=str, default="invCDF", help="Normalizing flow type")
-
-#   args = parser.parse_args()
-
-#   dim_reduced = args.DR
-#   flow_type = args.FT
-
-#   use_random_seed = 2024
-#   save = True
-#   #plot = True
-
-#   # Train HF and LF models together?
-#   together = True
-
-#   # Train sequentially, i.e. first train LF and HF models separately and initialize with those weights when training them together. 
-#   # Default value is true - works much better than directly training HF and LF models together
-#   sequential = True
-
-#   # Repeated trials
-#   # 0,1: Run the method once / >1: Run multiple trials
-#   repeated_trials = 0 
-
-#   # Path to simulation data
-#   data_path = "../coronary/"
-
-#   # Path to location for outputs/results
-#   base_path = "./"
-
-#   # True OR False OR filename with tuned hyperparameters
-#   hyperparameter_tuning = data_path + "/hyperparameters/hyperparameters_together.txt" 
-
-#   # QoI details
-#   QoI_LF_name = "mean_flow:lca1:BC_lca1"
-#   QoI_HF_name = "max_osi_sten_lad"
-
-#   # Number of pilot samples to use for constructing shared space and surrogate model
-#   # Positive integer: Use specified number of samples OR -1: Use all samples
-#   num_pilot_samples_to_use = 250
-
-#   # Neural network hyperparameters (not tuned) for AE and surrogate models
-#   activation = torch.nn.Tanh()
-#   epochs = 10000
 
     # -------------------------------
     # Check user inputs
@@ -136,6 +86,8 @@ def run_using_data(config):
     else:
         repeated_trials = 1
 
+    if isinstance(load_NN_models, str):
+        NN_model_path = load_NN_models
     # -------------------------------
     # Run dimensionality reduction
     # -------------------------------
@@ -184,7 +136,7 @@ def run_using_data(config):
 
             if (hyperparameter_tuning == 1): 
                 # Tune hyperparameters
-                hyperparameters = tune_hyperparameter(base_path, f_data, g_data, f_output, g_output, dim_reduced, activation, flow_type, layers_max, neurons_max, lr_min, lr_max, gamma_min, gamma_max, epochs, k_splits, max_evals, hyperparameters_name, together, sequential)
+                hyperparameters = tune_hyperparameters(base_path, f_data, g_data, f_output, g_output, dim_reduced, activation, flow_type, layers_max, neurons_max, lr_min, lr_max, gamma_min, gamma_max, epochs, k_splits, max_evals, hyperparameters_name, together, sequential)
             
             elif isinstance(hyperparameter_tuning, str): 
                 # Read tuned hyperparameters from a file
@@ -236,15 +188,39 @@ def run_using_data(config):
         # Surrogate and reduced model
         # -------------------------------
 
-        print("Finding surrogate and reduced models.")
+        if not load_NN_models:
+            
+            print("Finding surrogate and reduced models.")
 
-        if together:
-            f_surrogate, model_f, g_surrogate, model_g, _ = find_surrogate_reduced_correlated_models_invCDF(f_data, g_data, f_output, g_output, 'together', dim_reduced, activation, layers_surrogate, neurons_surrogate, layers_AE, neurons_AE, lr, gamma, alpha, epochs, sequential)
-        
+            if together:
+                f_surrogate, model_f, g_surrogate, model_g, loss , model_state_dict = find_surrogate_reduced_correlated_models_invCDF(
+                        f_data, g_data, f_output, g_output, 'together', dim_reduced, activation, layers_surrogate, neurons_surrogate, 
+                        layers_AE, neurons_AE, lr, gamma, alpha, epochs, sequential)
+            
+            else:
+                f_surrogate, model_f, loss_f, model_state_dict_f = find_surrogate_reduced_model(f_data, f_output, 'f', dim_reduced, 
+                        activation, layers_surrogate, neurons_surrogate, layers_AE, neurons_AE, lr, gamma, epochs)
+                g_surrogate, model_g, loss_g, model_state_dict_g = find_surrogate_reduced_model(g_data, g_output, 'g', dim_reduced, 
+                        activation, layers_surrogate, neurons_surrogate, layers_AE, neurons_AE, lr, gamma, epochs)
+
+                model_state_dict = {"HF" : model_state_dict_f, "LF" : model_state_dict_g}
+
         else:
-            f_surrogate, model_f, _ = find_surrogate_reduced_model(f_data, f_output, 'f', dim_reduced, activation, layers_surrogate, neurons_surrogate, layers_AE, neurons_AE, lr, gamma, epochs)
-            g_surrogate, model_g, _ = find_surrogate_reduced_model(g_data, g_output, 'g', dim_reduced, activation, layers_surrogate, neurons_surrogate, layers_AE, neurons_AE, lr, gamma, epochs)
 
+            print("Loading surrogate and reduced models from " + NN_model_path)
+            
+            _, dim_f = f_data.shape
+            _, dim_g = g_data.shape
+            if together:
+                f_surrogate, model_f, g_surrogate, model_g = load_surrogate_reduced_correlated_models_invCDF(NN_model_path, 
+                        dim_f, dim_g, dim_reduced, activation, layers_surrogate, neurons_surrogate, layers_AE, neurons_AE)
+            
+            else:
+                f_surrogate, model_f = load_surrogate_reduced_model(NN_model_path, "HF", dim_f, dim_reduced, activation, 
+                        layers_surrogate, neurons_surrogate, layers_AE, neurons_AE)
+                g_surrogate, model_g = load_surrogate_reduced_model(NN_model_path, "LF", dim_g, dim_reduced, activation, 
+                        layers_surrogate, neurons_surrogate, layers_AE, neurons_AE)
+        
         # Error between simulation outputs and surrogate model outputs
         error_f = (100*torch.norm(f_output - f_surrogate(f_data))/torch.norm(f_output)).item()
         error_g = (100*torch.norm(g_output - g_surrogate(g_data))/torch.norm(g_output)).item()
@@ -273,40 +249,20 @@ def run_using_data(config):
         elif flow_type == 'RealNVP':
 
             if dim_reduced == 1:
-                T_f, T_inverse_f, _ = find_normalizing_flow_1D(data_reduced_f, layers_NF_AE, neurons_NF_AE, epochs, 'f', lr_NF_AE, gamma_NF_AE)
-                T_g, T_inverse_g, _ = find_normalizing_flow_1D(data_reduced_g, layers_NF_AE, neurons_NF_AE, epochs, 'g', lr_NF_AE, gamma_NF_AE)
+                T_f, T_inverse_f, _ = find_normalizing_flow_1D(data_reduced_f, layers_NF_AE, neurons_NF_AE, epochs, 
+                        'f', lr_NF_AE, gamma_NF_AE)
+                T_g, T_inverse_g, _ = find_normalizing_flow_1D(data_reduced_g, layers_NF_AE, neurons_NF_AE, epochs, 
+                        'g', lr_NF_AE, gamma_NF_AE)
             else:
-                T_f, T_inverse_f, _ = find_normalizing_flow(data_reduced_f, layers_NF_AE, neurons_NF_AE, epochs, 'f', lr_NF_AE, gamma_NF_AE)
-                T_g, T_inverse_g, _ = find_normalizing_flow(data_reduced_g, layers_NF_AE, neurons_NF_AE, epochs, 'g', lr_NF_AE, gamma_NF_AE)
+                T_f, T_inverse_f, _ = find_normalizing_flow(data_reduced_f, layers_NF_AE, neurons_NF_AE, epochs, 'f', 
+                        lr_NF_AE, gamma_NF_AE)
+                T_g, T_inverse_g, _ = find_normalizing_flow(data_reduced_g, layers_NF_AE, neurons_NF_AE, epochs, 'g', 
+                        lr_NF_AE, gamma_NF_AE)
                 
         elif flow_type == 'invCDF' and dim_reduced == 1:
             
             T_f, T_inverse_f = find_normalizing_flow_invCDF(data_reduced_f)
             T_g, T_inverse_g = find_normalizing_flow_invCDF(data_reduced_g)
-            
-    #   if plot and dim_reduced == 1:
-    #       
-    #       z_standardGaussian = torch.normal(0,1, size = (1000,1))
-
-    #       plt.figure()
-    #       plt.hist(data_reduced_f[:,0], color = 'r', label = 'data',alpha = 0.4, density=True)
-    #       plt.hist(T_f(z_standardGaussian).detach()[:,0], color = 'b', label = 'NF',alpha = 0.4, density=True)
-    #       plt.title('Distribution latent space f')
-    #       plt.legend()
-
-    #       plt.figure()
-    #       plt.hist(T_inverse_f(data_reduced_f).detach()[:,0], alpha = 0.4, density=True)
-    #       plt.title('Check standard Gaussian f')
-
-    #       plt.figure()
-    #       plt.hist(data_reduced_g[:,0], color = 'r', label = 'data',alpha = 0.4, density=True)
-    #       plt.hist(T_g(z_standardGaussian).detach()[:,0], color = 'b', label = 'NF',alpha = 0.4, density=True)
-    #       plt.title('Distribution latent space g')
-    #       plt.legend()
-
-    #       plt.figure()
-    #       plt.hist(T_inverse_g(data_reduced_g).detach()[:,0], alpha = 0.4, density=True)
-    #       plt.title('Check standard Gaussian g')
             
         # -------------------------------------------
         # Find best ordering if reduced dimension > 1
@@ -351,11 +307,24 @@ def run_using_data(config):
                 os.mkdir(base_path + "/results")
             
             # Write normalized resampled inputs
-            np.savetxt(base_path + "/results/new_parameters_LF_normalized_AE"+config_string+trial_idx_str+".csv", data_g_reduced, delimiter=",")
-            np.savetxt(base_path + "/results/new_parameters_propagation_LF_normalized_AE"+config_string+trial_idx_str+".csv", data_g_reduced_propagation, delimiter=",")
+            np.savetxt(base_path + "/results/new_parameters_LF_normalized_AE"+config_string+trial_idx_str+".csv", 
+                    data_g_reduced, delimiter=",")
+            np.savetxt(base_path + "/results/new_parameters_propagation_LF_normalized_AE"+config_string+trial_idx_str+".csv", 
+                    data_g_reduced_propagation, delimiter=",")
             
             # Un-normalize resampled inputs
             write_unnormalized_data(base_path, config_string, trial_idx_str)
+
+            # Save autoencoders and surrogate models
+            if not os.path.exists(base_path + "/results/models"):
+                os.mkdir(base_path + "/results/models")
+
+            if not load_NN_models:
+                if together:
+                    torch.save(model_state_dict, base_path + "/results/NN_models.pt")
+                else:
+                    torch.save(model_state_dict_HF, base_path + "/results/NN_models_HF.pt")
+                    torch.save(model_state_dict_LF, base_path + "/results/NN_models_LF.pt")
 
         # --------------------------------------
         # Compute new correlation b/w HF and LF 
@@ -376,4 +345,19 @@ def run_using_data(config):
     # Save the results if running repeated trials
     # --------------------------------------------
     if (repeated_trials > 1):
-        np.savetxt(trials_filename, np.column_stack((np.array(surrogate_f_error),np.array(surrogate_g_error),np.array(initial_correlation),np.array(final_correlation))), header = 'surrogate_f_error, surrogate_g_error, initial_correlation, final_correlation')
+        np.savetxt(trials_filename, np.column_stack((np.array(surrogate_f_error), np.array(surrogate_g_error), 
+            np.array(initial_correlation),np.array(final_correlation))), 
+            header = 'surrogate_f_error, surrogate_g_error, initial_correlation, final_correlation')
+
+    # --------------------------------------------
+    # Print message for user
+    # --------------------------------------------
+    print("\n--------------------------------------------------------------------")
+    print("--------------------------------------------------------------------")
+    print("The neural active manifold and reduced-order surrogate models have been constructed and saved in " + base_path + "/results.")
+    print("The next step is to run the low-fidelity model using the resampled inputs and save the results in the `simulations` directory.")
+    print("Please find the new resampled inputs (parameters) for the pilot sample in " + base_path + "/results/new_parameters_LF_AE"+config_string+trial_idx_str + ".csv")
+    print("Please find the new resampled inputs (parameters) for the propagation samples in " + base_path + "/results/new_parameters_propagation_LF_AE"+config_string+trial_idx_str + ".csv")
+    print("The simulation data should be stored in the same format as the outputs from the original pilot/propagation samples.")
+    print("--------------------------------------------------------------------")
+    print("--------------------------------------------------------------------")

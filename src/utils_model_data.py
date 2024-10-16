@@ -12,64 +12,66 @@ import os
 
 # Surrogate model & autoencoder
 
+class Autoencoder(torch.nn.Module):
+
+    def __init__(self, layers_AE, neurons_AE, dim, dim_reduced, activation):
+        super().__init__()
+
+        model_structure = []
+        for i in range(layers_AE-1):
+            model_structure += [torch.nn.Linear(neurons_AE, neurons_AE), activation]
+
+        self.encoder = torch.nn.Sequential(
+            torch.nn.Linear(dim, neurons_AE),
+            activation,
+            *model_structure,
+            torch.nn.Linear(neurons_AE, dim_reduced)
+        )
+
+        self.decoder = torch.nn.Sequential(
+            torch.nn.Linear(dim_reduced, neurons_AE),
+            activation,
+            *model_structure,
+            torch.nn.Linear(neurons_AE, dim),
+            torch.nn.Sigmoid()
+        )
+
+    def encode(self, x):
+        encoded = self.encoder(x)
+        return encoded
+
+    def decode(self, z):
+        decoded = 2*self.decoder(z) - 1
+        return decoded
+
+    def forward(self, x):
+        encoded = self.encode(x)
+        decoded = self.decode(encoded)
+        return decoded
+
+class Surrogate_NN(torch.nn.Module):
+
+    def __init__(self, layers_surrogate, neurons_surrogate, dim_reduced, activation):
+        super().__init__()
+
+        model_structure = [torch.nn.Linear(dim_reduced, neurons_surrogate), activation]
+        for i in range(layers_surrogate-1):
+            model_structure += [torch.nn.Linear(neurons_surrogate, neurons_surrogate), activation]
+        model_structure += [torch.nn.Linear(neurons_surrogate, 1)]
+        self.net = torch.nn.Sequential(*model_structure)
+
+    def forward(self, x):
+        output = self.net(x)
+        return output
+
+# Functions to train surrogate model & autoencoder
+
 def find_surrogate_reduced_model(X, Y, name, dim_reduced, activation, layers_surrogate, neurons_surrogate, layers_AE, neurons_AE, lr, gamma, epochs, show=True, X_test=None, Y_test=None, return_surrogate_NN=False):
 
     _, dim = X.shape
 
-    class Autoencoder(torch.nn.Module):
-
-        def __init__(self):
-            super().__init__()
-
-            model_structure = []
-            for i in range(layers_AE-1):
-                model_structure += [torch.nn.Linear(neurons_AE, neurons_AE), activation]
-
-            self.encoder = torch.nn.Sequential(
-                torch.nn.Linear(dim, neurons_AE),
-                activation,
-                *model_structure,
-                torch.nn.Linear(neurons_AE, dim_reduced)
-            )
-
-            self.decoder = torch.nn.Sequential(
-                torch.nn.Linear(dim_reduced, neurons_AE),
-                activation,
-                *model_structure,
-                torch.nn.Linear(neurons_AE, dim),
-                torch.nn.Sigmoid()
-            )
-
-        def encode(self, x):
-            encoded = self.encoder(x)
-            return encoded
-
-        def decode(self, z):
-            decoded = 2*self.decoder(z) - 1
-            return decoded
-
-        def forward(self, x):
-            encoded = self.encode(x)
-            decoded = self.decode(encoded)
-            return decoded
-
-    class Surrogate_NN(torch.nn.Module):
-
-        def __init__(self):
-            super().__init__()
-
-            model_structure = [torch.nn.Linear(dim_reduced, neurons_surrogate), activation]
-            for i in range(layers_surrogate-1):
-                model_structure += [torch.nn.Linear(neurons_surrogate, neurons_surrogate), activation]
-            model_structure += [torch.nn.Linear(neurons_surrogate, 1)]
-            self.net = torch.nn.Sequential(*model_structure)
-
-        def forward(self, x):
-            output = self.net(x)
-            return output
-
-    model = Autoencoder()
-    surrogate = Surrogate_NN()
+    model = Autoencoder(layers_AE, neurons_AE, dim, dim_reduced, activation)
+    surrogate = Surrogate_NN(layers_surrogate, neurons_surrogate, dim_reduced, activation)
 
     optimizer = torch.optim.Adam(list(model.parameters()) + list(surrogate.parameters()), lr=lr)
     scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma)
@@ -99,16 +101,16 @@ def find_surrogate_reduced_model(X, Y, name, dim_reduced, activation, layers_sur
             loss_output = losses[0][-1]
         losses[1].append(loss_output)
 
-#   if show:
-#       plt.figure()
-#       plt.semilogy(losses[0], label='Train')
-#       if X_test is not None:
-#           plt.semilogy(losses[1], label='Test')
-#       plt.title("Loss surrogate + autoencoder " + name)
-#       plt.legend()
-#       plt.show(block=False)
-#       #plt.show()
-#       plt.close()
+   #if show:
+   #    plt.figure()
+   #    plt.semilogy(losses[0], label='Train')
+   #    if X_test is not None:
+   #        plt.semilogy(losses[1], label='Test')
+   #    plt.title("Loss surrogate + autoencoder " + name)
+   #    plt.legend()
+   #    plt.show(block=False)
+   #    #plt.show()
+   #    plt.close()
 
     def f_surrogate(x):
         model.eval()
@@ -116,10 +118,13 @@ def find_surrogate_reduced_model(X, Y, name, dim_reduced, activation, layers_sur
         y = torch.squeeze(surrogate(model.encoder(x))).detach()
         return y
     
+    save_data = {"autoencoder" : model.state_dict(),
+            "surrogate" : surrogate.state_dict()}
+    
     if return_surrogate_NN:
-        return f_surrogate, model, losses[1][-1], surrogate
+        return f_surrogate, model, losses, surrogate
     else:
-        return f_surrogate, model, losses[1][-1]
+        return f_surrogate, model, losses, save_data
 
 def find_surrogate_reduced_correlated_models_invCDF(X_f, X_g, Y_f, Y_g, name, dim_reduced, activation, layers_surrogate, neurons_surrogate, layers_AE, neurons_AE, lr, gamma, alpha, epochs, sequential, show=True, X_f_test=None, X_g_test=None, Y_f_test=None, Y_g_test=None):
 
@@ -130,62 +135,10 @@ def find_surrogate_reduced_correlated_models_invCDF(X_f, X_g, Y_f, Y_g, name, di
         _, dim_f = X_f.shape
         _, dim_g = X_g.shape
 
-        class Autoencoder(torch.nn.Module):
-
-            def __init__(self, dim):
-                super().__init__()
-
-                model_structure = []
-                for i in range(layers_AE-1):
-                    model_structure += [torch.nn.Linear(neurons_AE, neurons_AE), activation]
-
-                self.encoder = torch.nn.Sequential(
-                    torch.nn.Linear(dim, neurons_AE),
-                    activation,
-                    *model_structure,
-                    torch.nn.Linear(neurons_AE, dim_reduced)
-                )
-
-                self.decoder = torch.nn.Sequential(
-                    torch.nn.Linear(dim_reduced, neurons_AE),
-                    activation,
-                    *model_structure,
-                    torch.nn.Linear(neurons_AE, dim),
-                    torch.nn.Sigmoid()
-                )
-
-            def encode(self, x):
-                encoded = self.encoder(x)
-                return encoded
-
-            def decode(self, z):
-                decoded = 2*self.decoder(z) - 1
-                return decoded
-
-            def forward(self, x):
-                encoded = self.encode(x)
-                decoded = self.decode(encoded)
-                return decoded
-
-        class Surrogate_NN(torch.nn.Module):
-
-            def __init__(self):
-                super().__init__()
-
-                model_structure = [torch.nn.Linear(dim_reduced, neurons_surrogate), activation]
-                for i in range(layers_surrogate-1):
-                    model_structure += [torch.nn.Linear(neurons_surrogate, neurons_surrogate), activation]
-                model_structure += [torch.nn.Linear(neurons_surrogate, 1)]
-                self.net = torch.nn.Sequential(*model_structure)
-
-            def forward(self, x):
-                output = self.net(x)
-                return output
-
-        model_f = Autoencoder(dim_f)
-        model_g = Autoencoder(dim_g)
-        surrogate_f = Surrogate_NN()
-        surrogate_g = Surrogate_NN()
+        model_f = Autoencoder(layers_AE, neurons_AE, dim_f, dim_reduced, activation)
+        model_g = Autoencoder(layers_AE, neurons_AE, dim_g, dim_reduced, activation)
+        surrogate_f = Surrogate_NN(layers_surrogate, neurons_surrogate, dim_reduced, activation)
+        surrogate_g = Surrogate_NN(layers_surrogate, neurons_surrogate, dim_reduced, activation)
     
     optimizer = torch.optim.Adam(list(model_f.parameters()) + list(model_g.parameters()) + list(surrogate_f.parameters()) + list(surrogate_g.parameters()), lr=lr)
     scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma)
@@ -274,12 +227,69 @@ def find_surrogate_reduced_correlated_models_invCDF(X_f, X_g, Y_f, Y_g, name, di
         y = torch.squeeze(surrogate_g(model_g.encoder(x))).detach()
         return y
 
-    return f_surrogate, model_f, g_surrogate, model_g, losses[1][-1]
-    #return f_surrogate, model_f, g_surrogate, model_g, None
+    save_data = {"autoencoder_HF" : model_f.state_dict(),
+            "autoencoder_LF" : model_g.state_dict(),
+            "surrogate_HF" : surrogate_f.state_dict(),
+            "surrogate_LF" : surrogate_g.state_dict()}
+
+    return f_surrogate, model_f, g_surrogate, model_g, losses, save_data
+
+# Load autoencoder and surrogate model from saved PyTorch files
+
+def load_surrogate_reduced_correlated_models_invCDF(NN_model_path, dim_f, dim_g, dim_reduced, activation, layers_surrogate, neurons_surrogate, layers_AE, neurons_AE):
+   
+    # Initialize models
+    model_f = Autoencoder(layers_AE, neurons_AE, dim_f, dim_reduced, activation)
+    model_g = Autoencoder(layers_AE, neurons_AE, dim_g, dim_reduced, activation)
+    surrogate_f = Surrogate_NN(layers_surrogate, neurons_surrogate, dim_reduced, activation)
+    surrogate_g = Surrogate_NN(layers_surrogate, neurons_surrogate, dim_reduced, activation)
+   
+    # Read models
+    saved_models = torch.load(NN_model_path+"/NN_models.pt", weights_only=True)
+    model_f.load_state_dict(saved_models["autoencoder_HF"])
+    model_g.load_state_dict(saved_models["autoencoder_LF"])
+    surrogate_f.load_state_dict(saved_models["surrogate_HF"])
+    surrogate_g.load_state_dict(saved_models["surrogate_LF"])
+    model_f.eval()
+    model_g.eval()
+
+    def f_surrogate(x):
+        model_f.eval()
+        surrogate_f.eval()
+        y = torch.squeeze(surrogate_f(model_f.encoder(x))).detach()
+        return y
+
+    def g_surrogate(x):
+        model_g.eval()
+        surrogate_g.eval()
+        y = torch.squeeze(surrogate_g(model_g.encoder(x))).detach()
+        return y
+    
+    return f_surrogate, model_f, g_surrogate, model_g
+
+def load_surrogate_reduced_model(NN_model_path, key, dim, dim_reduced, activation, layers_surrogate, neurons_surrogate, layers_AE, neurons_AE):
+    
+    # Initialize models
+    model = Autoencoder(layers_AE, neurons_AE, dim, dim_reduced, activation)
+    surrogate = Surrogate_NN(layers_surrogate, neurons_surrogate, dim_reduced, activation)
+    
+    # Read models
+    saved_models = torch.load(NN_model_path+"NN_models_"+key+".pt", weights_only=True)
+    model.load_state_dict(saved_models["autoencoder"])
+    surrogate.load_state_dict(saved_models["surrogate"])
+    model.eval()
+
+    def surrogate(x):
+        model.eval()
+        surrogate.eval()
+        y = torch.squeeze(surrogate(model.encoder(x))).detach()
+        return y
+
+    return surrogate, model 
 
 # Hyperparameter tuning
 
-def tune_hyperparameter(base_path, f_data, g_data, f_output, g_output, dim_reduced, activation, flow_type, layers_max, neurons_max, lr_min, lr_max, gamma_min, gamma_max, epochs, k_splits, max_evals, name, together, sequential, tune_alpha = False, show=True):
+def tune_hyperparameters(base_path, f_data, g_data, f_output, g_output, dim_reduced, activation, flow_type, layers_max, neurons_max, lr_min, lr_max, gamma_min, gamma_max, epochs, k_splits, max_evals, name, together, sequential, tune_alpha = False, show=True):
 
     k = 1/k_splits
     hyperparameters = {}
@@ -308,11 +318,12 @@ def tune_hyperparameter(base_path, f_data, g_data, f_output, g_output, dim_reduc
                 alpha = params.suggest_float('alpha', 0.5, 2.0)
             else:
                 alpha = 1.0
-            f_surrogate, model_f, g_surrogate, model_g, loss = find_surrogate_reduced_correlated_models_invCDF(f_data_train, g_data_train, f_output_train, g_output_train, 'together', dim_reduced, activation, layers_surrogate, neurons_surrogate, layers_AE, neurons_AE, lr, gamma, alpha, epochs, sequential, show=False, X_f_test=f_data_test, X_g_test=g_data_test, Y_f_test=f_output_test, Y_g_test=g_output_test)
+            f_surrogate, model_f, g_surrogate, model_g, loss_all = find_surrogate_reduced_correlated_models_invCDF(f_data_train, g_data_train, f_output_train, g_output_train, 'together', dim_reduced, activation, layers_surrogate, neurons_surrogate, layers_AE, neurons_AE, lr, gamma, alpha, epochs, sequential, show=False, X_f_test=f_data_test, X_g_test=g_data_test, Y_f_test=f_output_test, Y_g_test=g_output_test)
+            loss = loss_all[1][-1]
         else:
             f_surrogate, model_f, loss_f = find_surrogate_reduced_model(f_data_train, f_output_train, 'f', dim_reduced, activation, layers_surrogate, neurons_surrogate, layers_AE, neurons_AE, lr, gamma, epochs, show=False, X_test=f_data_test, Y_test=f_output_test)
             g_surrogate, model_g, loss_g = find_surrogate_reduced_model(g_data_train, g_output_train, 'g', dim_reduced, activation, layers_surrogate, neurons_surrogate, layers_AE, neurons_AE, lr, gamma, epochs, show=False, X_test=g_data_test, Y_test=g_output_test)
-            loss = loss_f + loss_g
+            loss = loss_f[1][-1] + loss_g[1][-1]
         return loss
 
     study = optuna.create_study(direction='minimize')
