@@ -293,7 +293,7 @@ def tune_hyperparameter(base_path, f_data, g_data, f_output, g_output, dim_reduc
     f_output_train, f_output_test = train_test_split(f_output, test_size=k, shuffle=False)
     g_output_train, g_output_test = train_test_split(g_output, test_size=k, shuffle=False)
     
-    #%% Surrogate model & Autoencoder
+    # Surrogate model & autoencoder
     
     print("Finding best surrogate and reduced models ...")
 
@@ -357,7 +357,7 @@ def tune_hyperparameter(base_path, f_data, g_data, f_output, g_output, dim_reduc
         f_surrogate, model_f, loss_f = find_surrogate_reduced_model(f_data_train, f_output_train, 'f', dim_reduced, activation, layers_surrogate_best, neurons_surrogate_best, layers_AE_best, neurons_AE_best, lr_best, gamma_best, epochs, show=False)
         g_surrogate, model_g, loss_g = find_surrogate_reduced_model(g_data_train, g_output_train, 'g', dim_reduced, activation, layers_surrogate_best, neurons_surrogate_best, layers_AE_best, neurons_AE_best, lr_best, gamma_best, epochs, show=False)
 
-    #%% Normalizing flow for AE
+    # Normalizing flow for AE
     
     if flow_type != 'invCDF':
 

@@ -1,0 +1,7 @@
+layers_surrogate: 1
+neurons_surrogate: 10
+layers_AE: 3
+neurons_AE: 13
+lr: 0.006047505626284127
+gamma: 0.9998928378014768
+alpha: 1.0
