@@ -708,14 +708,15 @@ def read_simulation_data(QoI_LF_name, QoI_HF_name, parameters_file, all_0d_data_
 
 def write_normalized_data(base_path, data_path, QoI_LF_name, QoI_HF_name, num_pilot_samples_to_use, trial_name_str = ""):
 
-    parameters_file = data_path + "/simulations/all_param_values.json"
-    all_0d_data_file = data_path + "/simulations/all_0d_data.json"
-    all_3d_data_file = data_path + "/simulations/all_3d_data.json"
-    parameters_file_propagation = data_path + "/simulations/all_param_values_propagation.json"
+    parameters_file = base_path + data_path + "/simulations/all_param_values.json"
+    all_0d_data_file = base_path + data_path + "/simulations/all_0d_data.json"
+    all_3d_data_file = base_path + data_path + "/simulations/all_3d_data.json"
+    parameters_file_propagation = base_path + data_path + "/simulations/all_param_values_propagation.json"
 
     # Read data
 
-    samples, parameters, QoI_LF, QoI_HF, parameters_propagation, _, _, _ = read_simulation_data(QoI_LF_name, QoI_HF_name, parameters_file, all_0d_data_file, all_3d_data_file, parameters_file_propagation)
+    samples, parameters, QoI_LF, QoI_HF, parameters_propagation, _, _, _ = read_simulation_data(QoI_LF_name, QoI_HF_name, 
+            parameters_file, all_0d_data_file, all_3d_data_file, parameters_file_propagation)
     num_params = parameters.shape[1]
 
     # Number of pilot samples to use
