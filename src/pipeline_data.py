@@ -4,11 +4,11 @@ from utils_model_data import find_surrogate_reduced_model, find_surrogate_reduce
 from utils_model_data import load_surrogate_reduced_model, load_surrogate_reduced_correlated_models_invCDF
 from utils_model_data import find_normalizing_flow, find_normalizing_flow_1D, find_normalizing_flow_spline, find_normalizing_flow_invCDF
 from utils_model_data import write_normalized_data, write_unnormalized_data
+from utils_model_data import read_simulation_data
 from itertools import permutations
 import os
 from utils_general import read_json_entry
 import scipy.stats as stats
-from help_functions import read_simulation_data
 
 # -------------------------------
 
@@ -393,7 +393,7 @@ def process_resampled_sim_data(config):
 
     # Path to location for outputs/results
     base_path = "./"
-    base_path = os.path.abspath(base_path)
+#   base_path = os.path.abspath(base_path)
 
     # Path to simulation data
     data_path = read_json_entry(config["model"], "data_path")
@@ -461,9 +461,9 @@ def process_resampled_sim_data(config):
     new_0d_data_file = base_path + data_path + "/simulations/all_0d_data_AE.json"
     all_0d_data_file_prop = base_path + data_path + "/simulations/all_0d_data_propagation.json"
     new_0d_data_file_prop = base_path + data_path + "/simulations/all_0d_data_AE_propagation.json"
-    samples, parameters, QoI_LF, QoI_HF, _, new_QoI_LF_AE, _, _ = read_simulation_data(QoI_LF_name, QoI_HF_name, parameters_file, all_0d_data_file, all_3d_data_file, None, new_0d_data_file)
+#   samples, parameters, QoI_LF, QoI_HF, _, new_QoI_LF_AE, _, _ = read_simulation_data(QoI_LF_name, QoI_HF_name, parameters_file, all_0d_data_file, all_3d_data_file, None, new_0d_data_file)
     
-    samples, parameters, QoI_LF, QoI_HF, _, QoI_LF_AE, QoI_LF_prop, QoI_LF_prop_AE = 
+    samples, parameters, QoI_LF, QoI_HF, _, QoI_LF_AE, QoI_LF_prop, QoI_LF_prop_AE = \
     read_simulation_data(QoI_LF_name, QoI_HF_name, parameters_file, all_0d_data_file, all_3d_data_file, 
             None, new_0d_data_file, all_0d_data_file_prop, new_0d_data_file_prop)
 
@@ -741,10 +741,27 @@ def process_resampled_sim_data(config):
     #       print(MC_std*np.sqrt(1-((num_lf-num_hf)/num_lf)*rho_AE**2))
 
     if save:
-        np.savez("results/propagation.npz", means=means, std=std, k_99=k_99, k_95=k_95)
-        np.savez("results/cost_analysis.npz", std_reduction_range=std_reduction_range, MC_std=MC_std, 
-                std_mfmc_fixed_budget=std_mfmc_fixed_budget, std_mfmc_fixed_budget_ae=std_mfmc_fixed_budget_ae,
-                N_HF=N_HF, num_hf_mc=num_hf_mc, num_hf_mfmc=num_hf_mfmc, num_hf_mfmc_ae=num_hf_mfmc_ae)
+        with open(base_path+'results/MC.dat', 'w') as f:
+            f.write("Mean = " + str(MC_mean) + "\n")
+            f.write("Std = " + str(MC_std) + "\n")
+        with open(base_path+'results/MFMC.dat', 'w') as f:
+            f.write("Mean = " + str(MFMC_mean) + "\n")
+            f.write("Std = " + str(MFMC_std) + "\n")
+            f.write("Correlation = " + str(rho) + "\n")
+            f.write("Optimal number HF samples: " + str(N_HF_optimal) + "\n")
+            f.write("Optimal number LF samples: " + str(N_LF_optimal) + "\n")
+            f.write("Optimal std = " + str(MFMC_std_optimal))
+        with open(base_path+'results/MFMC_AE.dat', 'w') as f:
+            f.write("Mean = " + str(MFMC_AE_mean) + "\n")
+            f.write("Std = " + str(MFMC_AE_std) + "\n")
+            f.write("Correlation = " + str(rho_AE) + "\n")
+            f.write("Optimal number HF samples: " + str(N_HF_optimal_AE) + "\n")
+            f.write("Optimal number LF samples: " + str(N_LF_optimal_AE) + "\n")
+            f.write("Optimal std = " + str(MFMC_AE_std_optimal) + "\n")
+#       np.savez("results/propagation.npz", means=means, std=std, k_99=k_99, k_95=k_95)
+#       np.savez("results/cost_analysis.npz", std_reduction_range=std_reduction_range, MC_std=MC_std, 
+#               std_mfmc_fixed_budget=std_mfmc_fixed_budget, std_mfmc_fixed_budget_ae=std_mfmc_fixed_budget_ae,
+#               N_HF=N_HF, num_hf_mc=num_hf_mc, num_hf_mfmc=num_hf_mfmc, num_hf_mfmc_ae=num_hf_mfmc_ae)
 
 #       else:
         #final_correlation[trial_idx] = rho_AE
