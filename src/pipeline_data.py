@@ -383,7 +383,7 @@ def run_using_data(config):
     print("\n--------------------------------------------------------------------")
     print("--------------------------------------------------------------------")
     print("The neural active manifold and reduced-order surrogate models have been constructed and saved in " + base_path + "/results.")
-    print("The next step is to run the low-fidelity model using the resampled inputs and save the results in the `simulations` directory.")
+    print('The next step is to run the low-fidelity model using the resampled inputs and save the results in the "data_path" directory.')
     print("Please find the new resampled inputs (parameters) for the pilot sample in " + base_path \
             + "/results/new_parameters_LF_AE"+config_string+trial_idx_str + ".csv")
     print("Please find the new resampled inputs (parameters) for the propagation samples in " + base_path \
@@ -401,7 +401,6 @@ def process_resampled_sim_data(config):
 
     # Path to location for outputs/results
     base_path = "./"
-#   base_path = os.path.abspath(base_path)
 
     # Path to simulation data
     data_path = read_json_entry(config["model"], "data_path")
@@ -423,12 +422,12 @@ def process_resampled_sim_data(config):
     # -------------------------------
     # Read data
     # -------------------------------
-    parameters_file = base_path + data_path + "/simulations/all_param_values.json"
-    all_0d_data_file = base_path + data_path + "/simulations/all_0d_data.json"
-    all_3d_data_file = base_path + data_path + "/simulations/all_3d_data.json"
-    new_0d_data_file = base_path + data_path + "/simulations/all_0d_data_AE.json"
-    all_0d_data_file_prop = base_path + data_path + "/simulations/all_0d_data_propagation.json"
-    new_0d_data_file_prop = base_path + data_path + "/simulations/all_0d_data_AE_propagation.json"
+    parameters_file = data_path + "/all_param_values.json"
+    all_0d_data_file = data_path + "/all_0d_data.json"
+    all_3d_data_file = data_path + "/all_3d_data.json"
+    new_0d_data_file = data_path + "/all_0d_data_AE.json"
+    all_0d_data_file_prop = data_path + "/all_0d_data_propagation.json"
+    new_0d_data_file_prop = data_path + "/all_0d_data_AE_propagation.json"
     
     samples, parameters, QoI_LF, QoI_HF, _, QoI_LF_AE, QoI_LF_prop, QoI_LF_prop_AE = \
     read_simulation_data(QoI_LF_name, QoI_HF_name, parameters_file, all_0d_data_file, all_3d_data_file, 

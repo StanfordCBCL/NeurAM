@@ -2,11 +2,11 @@
     "model_type" : "data",
     "number_of_iterations" : 1,
     "epochs" : 10000,
-    "random_seed" : 2024,
+    "random_seed" : 2025,
     "save" : true,
     "hyperparameter_tuning" : "hyperparameters.txt",
     "model" : {
-        "data_path" : "./",
+        "data_path" : "./simulations/",
         "HF_QoI_name" : "max_osi_sten_lad",
         "LF_QoI_name" : "mean_flow:lca1:BC_lca1",
         "cost_ratio" : 4.1275E-6,
