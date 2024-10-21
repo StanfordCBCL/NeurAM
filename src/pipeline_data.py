@@ -552,6 +552,7 @@ def process_resampled_sim_data(config):
     if save:
         np.savetxt(base_path+'results/QoI_HF.dat', QoI_HF)
         np.savetxt(base_path+'results/QoI_LF.dat', QoI_LF)
+        np.savetxt(base_path+'results/QoI_LF_AE.dat', new_QoI_LF_AE)
         with open(base_path+'results/MC.dat', 'w') as f:
             f.write("Mean = " + str(MC_mean) + "\n")
             f.write("Std = " + str(MC_std) + "\n")
