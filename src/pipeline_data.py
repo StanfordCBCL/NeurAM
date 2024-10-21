@@ -426,15 +426,15 @@ def process_resampled_sim_data(config):
     # -------------------------------
     parameters_HF_file = data_files_json["HF_inputs"]
     parameters_LF_file = data_files_json["LF_inputs_pilot"]
-    all_0d_data_file = data_files_json["LF_outputs_pilot"]
-    all_3d_data_file = data_files_json["HF_outputs"]
-    new_0d_data_file = data_files_json["LF_outputs_pilot_AE"]
-    all_0d_data_file_prop = data_files_json["LF_outputs_propagation"]
-    new_0d_data_file_prop = data_files_json["LF_outputs_propagation_AE"]
+    all_LF_data_file = data_files_json["LF_outputs_pilot"]
+    all_HF_data_file = data_files_json["HF_outputs"]
+    new_LF_data_file = data_files_json["LF_outputs_pilot_AE"]
+    all_LF_data_file_prop = data_files_json["LF_outputs_propagation"]
+    new_LF_data_file_prop = data_files_json["LF_outputs_propagation_AE"]
     
     samples, parameters_LF, parameters_HF, QoI_LF, QoI_HF, _, QoI_LF_AE, QoI_LF_prop, QoI_LF_prop_AE = \
-    read_simulation_data(QoI_LF_name, QoI_HF_name, parameters_LF_file, parameters_HF_file, all_0d_data_file, all_3d_data_file, 
-            None, new_0d_data_file, all_0d_data_file_prop, new_0d_data_file_prop)
+    read_simulation_data(QoI_LF_name, QoI_HF_name, parameters_LF_file, parameters_HF_file, all_LF_data_file, all_HF_data_file, 
+            None, new_LF_data_file, all_LF_data_file_prop, new_LF_data_file_prop)
 
     num_samples = len(samples)
 
