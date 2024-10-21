@@ -32,7 +32,7 @@ def run_using_data(config):
     epochs = read_json_entry(config, "epochs")
     
     # Path to simulation data
-    data_path = read_json_entry(config["model"], "data_path")
+    data_files_json = config["model"]["data_files"]
     # Reduced dimension
     dim_reduced = read_json_entry(config["model"], "reduced_dimension", 1) 
     # QoI details
@@ -110,7 +110,7 @@ def run_using_data(config):
             trial_idx_str = ""
         
         # Write data files
-        write_normalized_data(base_path, data_path, QoI_LF_name, QoI_HF_name, num_pilot_samples_to_use, trial_idx_str)
+        write_normalized_data(base_path, data_files_json, QoI_LF_name, QoI_HF_name, num_pilot_samples_to_use, trial_idx_str)
 
         # Read data
         f_data = torch.from_numpy(np.genfromtxt(base_path + "/results/parameters_normalized"+trial_idx_str+".csv", delimiter=','))
@@ -126,7 +126,7 @@ def run_using_data(config):
         if (repeated_trials > 1):
             initial_correlation.append(rho)
 
-        print("Correlation coefficient: " + str(rho))
+        print("\nCorrelation coefficient: " + str(rho))
 
         # -------------------------------
         # Hyperparameter tuning
@@ -199,7 +199,7 @@ def run_using_data(config):
 
         if not load_NN_models:
             
-            print("Finding surrogate and reduced models.")
+            print("\nFinding surrogate and reduced models.")
 
             if together:
                 f_surrogate, model_f, g_surrogate, model_g, loss , model_state_dict = find_surrogate_reduced_correlated_models_invCDF(
@@ -216,7 +216,7 @@ def run_using_data(config):
 
         else:
 
-            print("Loading surrogate and reduced models from " + NN_model_path)
+            print("\nLoading surrogate and reduced models from " + NN_model_path)
             
             _, dim_f = f_data.shape
             _, dim_g = g_data.shape
@@ -234,7 +234,7 @@ def run_using_data(config):
         error_f = (100*torch.norm(f_output - f_surrogate(f_data))/torch.norm(f_output)).item()
         error_g = (100*torch.norm(g_output - g_surrogate(g_data))/torch.norm(g_output)).item()
 
-        print("Error surrogate f: " + str(error_f) + " %")
+        print("\nError surrogate f: " + str(error_f) + " %")
         print("Error surrogate g: " + str(error_g) + " %")
 
         if (repeated_trials > 1):
@@ -335,24 +335,24 @@ def run_using_data(config):
                     torch.save(model_state_dict_HF, base_path + "/results/NN_models_HF"+trial_idx_str+".pt")
                     torch.save(model_state_dict_LF, base_path + "/results/NN_models_LF"+trial_idx_str+".pt")
 
-            # Save loss history
-            if not os.path.exists(base_path + "/results/losses"):
-                os.mkdir(base_path + "/results/losses")
-            
-            if together:
-                # Losses for the second stage where HF and LF are trained together
-                np.savetxt(base_path + "/results/losses/test_loss"+trial_idx_str+".dat", np.asarray(loss[0]))
-                np.savetxt(base_path + "/results/losses/train_loss"+trial_idx_str+".dat", np.asarray(loss[1]))
-                if sequential:
-                    np.savetxt(base_path + "/results/losses/train_loss_HF"+trial_idx_str+".dat", np.asarray(loss[2][0]))
-                    np.savetxt(base_path + "/results/losses/test_loss_HF"+trial_idx_str+".dat", np.asarray(loss[2][1]))
-                    np.savetxt(base_path + "/results/losses/train_loss_LF"+trial_idx_str+".dat", np.asarray(loss[3][0]))
-                    np.savetxt(base_path + "/results/losses/test_loss_LF"+trial_idx_str+".dat", np.asarray(loss[3][1]))
-            else:
-                np.savetxt(base_path + "/results/losses/test_loss_HF"+trial_idx_str+".dat", np.asarray(loss_f[0]))
-                np.savetxt(base_path + "/results/losses/train_loss_HF"+trial_idx_str+".dat", np.asarray(loss_f[1]))
-                np.savetxt(base_path + "/results/losses/test_loss_LF"+trial_idx_str+".dat", np.asarray(loss_g[0]))
-                np.savetxt(base_path + "/results/losses/train_loss_LF"+trial_idx_str+".dat", np.asarray(loss_g[1]))
+                # Save loss history
+                if not os.path.exists(base_path + "/results/losses"):
+                    os.mkdir(base_path + "/results/losses")
+                
+                if together:
+                    # Losses for the second stage where HF and LF are trained together
+                    np.savetxt(base_path + "/results/losses/test_loss"+trial_idx_str+".dat", np.asarray(loss[0]))
+                    np.savetxt(base_path + "/results/losses/train_loss"+trial_idx_str+".dat", np.asarray(loss[1]))
+                    if sequential:
+                        np.savetxt(base_path + "/results/losses/train_loss_HF"+trial_idx_str+".dat", np.asarray(loss[2][0]))
+                        np.savetxt(base_path + "/results/losses/test_loss_HF"+trial_idx_str+".dat", np.asarray(loss[2][1]))
+                        np.savetxt(base_path + "/results/losses/train_loss_LF"+trial_idx_str+".dat", np.asarray(loss[3][0]))
+                        np.savetxt(base_path + "/results/losses/test_loss_LF"+trial_idx_str+".dat", np.asarray(loss[3][1]))
+                else:
+                    np.savetxt(base_path + "/results/losses/test_loss_HF"+trial_idx_str+".dat", np.asarray(loss_f[0]))
+                    np.savetxt(base_path + "/results/losses/train_loss_HF"+trial_idx_str+".dat", np.asarray(loss_f[1]))
+                    np.savetxt(base_path + "/results/losses/test_loss_LF"+trial_idx_str+".dat", np.asarray(loss_g[0]))
+                    np.savetxt(base_path + "/results/losses/train_loss_LF"+trial_idx_str+".dat", np.asarray(loss_g[1]))
 
         # --------------------------------------
         # Compute new correlation b/w HF and LF 
@@ -383,7 +383,7 @@ def run_using_data(config):
     print("\n--------------------------------------------------------------------")
     print("--------------------------------------------------------------------")
     print("The neural active manifold and reduced-order surrogate models have been constructed and saved in " + base_path + "/results.")
-    print('The next step is to run the low-fidelity model using the resampled inputs and save the results in the "data_path" directory.')
+    print("The next step is to run the low-fidelity model using the resampled inputs and save the results.")
     print("Please find the new resampled inputs (parameters) for the pilot sample in " + base_path \
             + "/results/new_parameters_LF_AE"+config_string+trial_idx_str + ".csv")
     print("Please find the new resampled inputs (parameters) for the propagation samples in " + base_path \
@@ -403,8 +403,8 @@ def process_resampled_sim_data(config):
     base_path = "./"
 
     # Path to simulation data
-    data_path = read_json_entry(config["model"], "data_path")
-    
+    data_files_json = config["model"]["data_files"]
+
     # QoI details
     QoI_HF_name = read_json_entry(config["model"], "HF_QoI_name")
     QoI_LF_name = read_json_entry(config["model"], "LF_QoI_name")
@@ -422,12 +422,12 @@ def process_resampled_sim_data(config):
     # -------------------------------
     # Read data
     # -------------------------------
-    parameters_file = data_path + "/all_param_values.json"
-    all_0d_data_file = data_path + "/all_0d_data.json"
-    all_3d_data_file = data_path + "/all_3d_data.json"
-    new_0d_data_file = data_path + "/all_0d_data_AE.json"
-    all_0d_data_file_prop = data_path + "/all_0d_data_propagation.json"
-    new_0d_data_file_prop = data_path + "/all_0d_data_AE_propagation.json"
+    parameters_file = data_files_json["HF_inputs"]
+    all_0d_data_file = data_files_json["LF_outputs_pilot"]
+    all_3d_data_file = data_files_json["HF_outputs"]
+    new_0d_data_file = data_files_json["LF_outputs_pilot_AE"]
+    all_0d_data_file_prop = data_files_json["LF_outputs_propagation"]
+    new_0d_data_file_prop = data_files_json["LF_outputs_propagation_AE"]
     
     samples, parameters, QoI_LF, QoI_HF, _, QoI_LF_AE, QoI_LF_prop, QoI_LF_prop_AE = \
     read_simulation_data(QoI_LF_name, QoI_HF_name, parameters_file, all_0d_data_file, all_3d_data_file, 

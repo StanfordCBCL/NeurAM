@@ -706,12 +706,12 @@ def read_simulation_data(QoI_LF_name, QoI_HF_name, parameters_file, all_0d_data_
     
     return samples, parameters, QoI_LF, QoI_HF, parameters_prop, pilot_AE_QoI_LF, prop_QoI_LF, prop_AE_QoI_LF
 
-def write_normalized_data(base_path, data_path, QoI_LF_name, QoI_HF_name, num_pilot_samples_to_use, trial_name_str = ""):
+def write_normalized_data(base_path, data_files_json, QoI_LF_name, QoI_HF_name, num_pilot_samples_to_use, trial_name_str = ""):
 
-    parameters_file = data_path + "/all_param_values.json"
-    all_0d_data_file = data_path + "/all_0d_data.json"
-    all_3d_data_file = data_path + "/all_3d_data.json"
-    parameters_file_propagation = data_path + "/all_param_values_propagation.json"
+    parameters_file = data_files_json["HF_inputs"]
+    all_0d_data_file = data_files_json["LF_outputs_pilot"]
+    all_3d_data_file = data_files_json["HF_outputs"]
+    parameters_file_propagation = data_files_json["LF_inputs_propagation"]
 
     # Read data
 
