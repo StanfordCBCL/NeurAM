@@ -6,10 +6,19 @@
     "save" : true,
     "hyperparameter_tuning" : "hyperparameters.txt",
     "model" : {
-        "data_path" : "./simulations/",
+        "data_files" : {
+            "HF_inputs" : "./simulations/all_param_values.json",
+            "HF_outputs" : "./simulations/all_3d_data.json",
+            "LF_inputs_pilot" : "./simulations/all_param_values.json",
+            "LF_outputs_pilot" : "./simulations/all_0d_data.json",
+            "LF_inputs_propagation" : "./simulations/all_param_values_propagation.json",
+            "LF_outputs_propagation" : "./simulations/all_0d_data_propagation.json",
+            "LF_outputs_pilot_AE" : "./simulations/all_0d_data_AE.json",
+            "LF_outputs_propagation_AE" : "./simulations/all_0d_data_AE_propagation.json"
+        },
         "HF_QoI_name" : "max_osi_sten_lad",
         "LF_QoI_name" : "mean_flow:lca1:BC_lca1",
         "cost_ratio" : 4.1275E-6,
-        "num_pilot_samples" : 250
+        "num_pilot_samples" : -1
     }
 }
