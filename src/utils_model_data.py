@@ -665,67 +665,72 @@ def read_data(mode, data_file, QoI_name = None, expected_samples = None, expecte
     else:
         raise RuntimeError("ERROR: Invalid option for 'mode'. Should be 'simulations'/'parameters'.")
 
-def read_simulation_data(QoI_LF_name, QoI_HF_name, parameters_file, all_0d_data_file, all_3d_data_file, parameters_file_propagation = None, pilot_AE_0d_data_file = None, prop_0d_data_file = None, prop_AE_0d_data_file = None):
+def read_simulation_data(QoI_LF_name, QoI_HF_name, parameters_LF_file, parameters_HF_file, all_LF_data_file, all_HF_data_file, parameters_file_propagation = None, pilot_AE_LF_data_file = None, prop_LF_data_file = None, prop_AE_LF_data_file = None):
 
-    samples_params, param_names, parameters = read_data("parameters", parameters_file)
-    samples_0d, data_fields_0d, QoI_LF = read_data("simulations", all_0d_data_file, QoI_LF_name)
-    samples_3d, data_fields_3d, QoI_HF = read_data("simulations", all_3d_data_file, QoI_HF_name)
+    #samples_params, param_names, parameters = read_data("parameters", parameters_file)
+    samples_params, param_names, parameters_LF = read_data("parameters", parameters_LF_file)
+    samples_params, param_names, parameters_HF = read_data("parameters", parameters_HF_file)
+    samples_LF, data_fields_LF, QoI_LF = read_data("simulations", all_LF_data_file, QoI_LF_name)
+    samples_HF, data_fields_HF, QoI_HF = read_data("simulations", all_HF_data_file, QoI_HF_name)
 
-    num_params = len(param_names)
-    num_samples_0d = len(samples_0d)
-    num_samples_3d = len(samples_3d)
+    #num_params = len(param_names)
+    num_samples_LF = len(samples_LF)
+    num_samples_HF = len(samples_HF)
 
-    num_samples = min(num_samples_0d, num_samples_3d)
+    num_samples = min(num_samples_LF, num_samples_HF)
     
-    if (not (samples_0d[0:num_samples] == samples_3d[0:num_samples])):
-        raise RuntimeError("ERROR: not (samples_0d[0:num_samples] == samples_3d[0:num_samples])")
-    samples = samples_0d[0:num_samples]
+    if (not (samples_LF[0:num_samples] == samples_HF[0:num_samples])):
+        raise RuntimeError("ERROR: not (samples_LF[0:num_samples] == samples_HF[0:num_samples])")
+    samples = samples_LF[0:num_samples]
     QoI_LF = QoI_LF[0:num_samples]
-    parameters = parameters[0:num_samples,:]
+    parameters_LF = parameters_LF[0:num_samples,:]
+    parameters_HF = parameters_HF[0:num_samples,:]
 
     if (parameters_file_propagation):
         samples_params_prop, param_names_prop, parameters_prop = read_data("parameters", parameters_file_propagation, None, None, param_names)
     else:
         parameters_prop = None
 
-    if (pilot_AE_0d_data_file):
-        #_, _, pilot_AE_QoI_LF = read_data("simulations", pilot_AE_0d_data_file, QoI_LF_name, samples)
-        _, _, pilot_AE_QoI_LF = read_data("simulations", pilot_AE_0d_data_file, QoI_LF_name)
+    if (pilot_AE_LF_data_file):
+        _, _, pilot_AE_QoI_LF = read_data("simulations", pilot_AE_LF_data_file, QoI_LF_name)
     else:
         pilot_AE_QoI_LF = None
 
-    if (prop_0d_data_file):
-        _, _, prop_QoI_LF = read_data("simulations", prop_0d_data_file, QoI_LF_name, None, data_fields_0d)
+    if (prop_LF_data_file):
+        _, _, prop_QoI_LF = read_data("simulations", prop_LF_data_file, QoI_LF_name, None, data_fields_LF)
     else:
         prop_QoI_LF = None
 
-    if (prop_AE_0d_data_file):
-        _, _, prop_AE_QoI_LF = read_data("simulations", prop_AE_0d_data_file, QoI_LF_name, None, data_fields_0d)
+    if (prop_AE_LF_data_file):
+        _, _, prop_AE_QoI_LF = read_data("simulations", prop_AE_LF_data_file, QoI_LF_name, None, data_fields_LF)
     else:
         prop_AE_QoI_LF = None
     
-    return samples, parameters, QoI_LF, QoI_HF, parameters_prop, pilot_AE_QoI_LF, prop_QoI_LF, prop_AE_QoI_LF
+    return samples, parameters_LF, parameters_HF, QoI_LF, QoI_HF, parameters_prop, pilot_AE_QoI_LF, prop_QoI_LF, prop_AE_QoI_LF
 
 def write_normalized_data(base_path, data_files_json, QoI_LF_name, QoI_HF_name, num_pilot_samples_to_use, trial_name_str = ""):
 
-    parameters_file = data_files_json["HF_inputs"]
-    all_0d_data_file = data_files_json["LF_outputs_pilot"]
-    all_3d_data_file = data_files_json["HF_outputs"]
+    parameters_HF_file = data_files_json["HF_inputs"]
+    parameters_LF_file = data_files_json["HF_inputs"]
+    all_LF_data_file = data_files_json["LF_outputs_pilot"]
+    all_HF_data_file = data_files_json["HF_outputs"]
     parameters_file_propagation = data_files_json["LF_inputs_propagation"]
 
     # Read data
 
-    samples, parameters, QoI_LF, QoI_HF, parameters_propagation, _, _, _ = read_simulation_data(QoI_LF_name, QoI_HF_name, 
-            parameters_file, all_0d_data_file, all_3d_data_file, parameters_file_propagation)
-    num_params = parameters.shape[1]
+    samples, parameters_LF, parameters_HF, QoI_LF, QoI_HF, parameters_propagation, _, _, _ = read_simulation_data(QoI_LF_name, QoI_HF_name, 
+            parameters_LF_file, parameters_HF_file, all_LF_data_file, all_HF_data_file, parameters_file_propagation)
+    num_params_LF = parameters_LF.shape[1]
+    num_params_HF = parameters_HF.shape[1]
 
     # Number of pilot samples to use
     if num_pilot_samples_to_use != -1: # If -1, use all samples
-        num_samples = parameters.shape[0]
+        num_samples = parameters_HF.shape[0]
         sample_idxs = np.random.default_rng().integers(0, num_samples, num_pilot_samples_to_use)
         QoI_LF = QoI_LF[sample_idxs]
         QoI_HF = QoI_HF[sample_idxs]
-        parameters = parameters[sample_idxs,:]
+        parameters_LF = parameters_LF[sample_idxs,:]
+        parameters_HF = parameters_HF[sample_idxs,:]
 
     # Values parameters
 
@@ -735,10 +740,15 @@ def write_normalized_data(base_path, data_files_json, QoI_LF_name, QoI_HF_name, 
     R_cor_min = 0.70
     R_cor_max = 1.25
 
-    min_parameters = np.array([R_min]*(num_params-1))
-    min_parameters = np.append(min_parameters,R_cor_min)
-    max_parameters = np.array([R_max]*(num_params-1))
-    max_parameters = np.append(max_parameters,R_cor_max)
+    min_parameters_LF = np.array([R_min]*(num_params_LF-1))
+    min_parameters_LF = np.append(min_parameters_LF, R_cor_min)
+    max_parameters_LF = np.array([R_max]*(num_params_LF-1))
+    max_parameters_LF = np.append(max_parameters_LF, R_cor_max)
+
+    min_parameters_HF = np.array([R_min]*(num_params_HF-1))
+    min_parameters_HF = np.append(min_parameters_HF, R_cor_min)
+    max_parameters_HF = np.array([R_max]*(num_params_HF-1))
+    max_parameters_HF = np.append(max_parameters_HF, R_cor_max)
 
     # Normalization
 
@@ -747,11 +757,18 @@ def write_normalized_data(base_path, data_files_json, QoI_LF_name, QoI_HF_name, 
     min_QoI_LF = np.min(QoI_LF) - 0.01
     max_QoI_LF = np.max(QoI_LF) + 0.01
 
-    parameters_normalized = np.empty(parameters.shape)
+    parameters_LF_normalized = np.empty(parameters_LF.shape)
+    parameters_HF_normalized = np.empty(parameters_HF.shape)
     parameters_propagation_normalized = np.empty(parameters_propagation.shape)
-    for j in range(parameters.shape[1]):
-        parameters_normalized[:,j] = (2*parameters[:,j] - min_parameters[j] - max_parameters[j])/(max_parameters[j] - min_parameters[j])
-        parameters_propagation_normalized[:,j] = (2*parameters_propagation[:,j] - min_parameters[j] - max_parameters[j])/(max_parameters[j] - min_parameters[j])
+    
+    # Normalize LF parameters
+    for j in range(parameters_LF.shape[1]):
+        parameters_LF_normalized[:,j] = (2*parameters_LF[:,j] - min_parameters_LF[j] - max_parameters_LF[j])/(max_parameters_LF[j] - min_parameters_LF[j])
+        parameters_propagation_normalized[:,j] = (2*parameters_propagation[:,j] - min_parameters_LF[j] - max_parameters_LF[j])/(max_parameters_LF[j] - min_parameters_LF[j])
+    
+    # Normalize HF parameters
+    for j in range(parameters_HF.shape[1]):
+        parameters_HF_normalized[:,j] = (2*parameters_HF[:,j] - min_parameters_HF[j] - max_parameters_HF[j])/(max_parameters_HF[j] - min_parameters_HF[j])
         
     QoI_HF_normalized = (2*QoI_HF - min_QoI_HF - max_QoI_HF)/(max_QoI_HF - min_QoI_HF)
     QoI_LF_normalized = (2*QoI_LF - min_QoI_LF - max_QoI_LF)/(max_QoI_LF - min_QoI_LF)
@@ -763,7 +780,8 @@ def write_normalized_data(base_path, data_files_json, QoI_LF_name, QoI_HF_name, 
     if not os.path.exists(base_path + "/results"):
         os.mkdir(base_path + "/results")
 
-    np.savetxt(base_path + "/results/parameters_normalized"+trial_name_str+".csv", parameters_normalized, delimiter=",")
+    np.savetxt(base_path + "/results/parameters_LF_normalized"+trial_name_str+".csv", parameters_LF_normalized, delimiter=",")
+    np.savetxt(base_path + "/results/parameters_HF_normalized"+trial_name_str+".csv", parameters_HF_normalized, delimiter=",")
     np.savetxt(base_path + "/results/parameters_propagation_normalized"+trial_name_str+".csv", parameters_propagation_normalized, delimiter=",")
 
     np.savetxt(base_path + "/results/QoI_HF_normalized"+trial_name_str+".csv", QoI_HF_normalized, delimiter=",")

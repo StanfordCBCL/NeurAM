@@ -113,8 +113,10 @@ def run_using_data(config):
         write_normalized_data(base_path, data_files_json, QoI_LF_name, QoI_HF_name, num_pilot_samples_to_use, trial_idx_str)
 
         # Read data
-        f_data = torch.from_numpy(np.genfromtxt(base_path + "/results/parameters_normalized"+trial_idx_str+".csv", delimiter=','))
-        g_data = torch.from_numpy(np.genfromtxt(base_path + "/results/parameters_normalized"+trial_idx_str+".csv", delimiter=','))
+#       f_data = torch.from_numpy(np.genfromtxt(base_path + "/results/parameters_normalized"+trial_idx_str+".csv", delimiter=','))
+#       g_data = torch.from_numpy(np.genfromtxt(base_path + "/results/parameters_normalized"+trial_idx_str+".csv", delimiter=','))
+        f_data = torch.from_numpy(np.genfromtxt(base_path + "/results/parameters_HF_normalized"+trial_idx_str+".csv", delimiter=','))
+        g_data = torch.from_numpy(np.genfromtxt(base_path + "/results/parameters_LF_normalized"+trial_idx_str+".csv", delimiter=','))
         f_output = torch.from_numpy(np.genfromtxt(base_path + "/results/QoI_HF_normalized"+trial_idx_str+".csv", delimiter=','))
         g_output = torch.from_numpy(np.genfromtxt(base_path + "/results/QoI_LF_normalized"+trial_idx_str+".csv", delimiter=','))
         data_propagation = torch.from_numpy(np.genfromtxt(base_path + "/results/parameters_propagation_normalized"+trial_idx_str+".csv", delimiter=','))
@@ -422,15 +424,16 @@ def process_resampled_sim_data(config):
     # -------------------------------
     # Read data
     # -------------------------------
-    parameters_file = data_files_json["HF_inputs"]
+    parameters_HF_file = data_files_json["HF_inputs"]
+    parameters_LF_file = data_files_json["LF_inputs_pilot"]
     all_0d_data_file = data_files_json["LF_outputs_pilot"]
     all_3d_data_file = data_files_json["HF_outputs"]
     new_0d_data_file = data_files_json["LF_outputs_pilot_AE"]
     all_0d_data_file_prop = data_files_json["LF_outputs_propagation"]
     new_0d_data_file_prop = data_files_json["LF_outputs_propagation_AE"]
     
-    samples, parameters, QoI_LF, QoI_HF, _, QoI_LF_AE, QoI_LF_prop, QoI_LF_prop_AE = \
-    read_simulation_data(QoI_LF_name, QoI_HF_name, parameters_file, all_0d_data_file, all_3d_data_file, 
+    samples, parameters_LF, parameters_HF, QoI_LF, QoI_HF, _, QoI_LF_AE, QoI_LF_prop, QoI_LF_prop_AE = \
+    read_simulation_data(QoI_LF_name, QoI_HF_name, parameters_LF_file, parameters_HF_file, all_0d_data_file, all_3d_data_file, 
             None, new_0d_data_file, all_0d_data_file_prop, new_0d_data_file_prop)
 
     num_samples = len(samples)
