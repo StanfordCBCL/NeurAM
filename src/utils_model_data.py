@@ -10,7 +10,9 @@ import optuna
 from sklearn.model_selection import train_test_split
 import os
 
-# Surrogate model & autoencoder
+# ----------------------------------------------------------------------------------------
+# Classes for surrogate model & autoencoder
+# ----------------------------------------------------------------------------------------
 
 class Autoencoder(torch.nn.Module):
 
@@ -64,7 +66,9 @@ class Surrogate_NN(torch.nn.Module):
         output = self.net(x)
         return output
 
+# ----------------------------------------------------------------------------------------
 # Functions to train surrogate model & autoencoder
+# ----------------------------------------------------------------------------------------
 
 def find_surrogate_reduced_model(X, Y, name, dim_reduced, activation, layers_surrogate, neurons_surrogate, layers_AE, neurons_AE, lr, gamma, epochs, show=True, X_test=None, Y_test=None, return_surrogate_NN=False):
 
@@ -125,6 +129,11 @@ def find_surrogate_reduced_model(X, Y, name, dim_reduced, activation, layers_sur
         return f_surrogate, model, losses, surrogate
     else:
         return f_surrogate, model, losses, save_data
+
+# ----------------------------------------------------------------------------------------
+# Train autoencoders and surrogate models for HF and LF models together 
+# using inverse-CDF normalizing flow
+# ----------------------------------------------------------------------------------------
 
 def find_surrogate_reduced_correlated_models_invCDF(X_f, X_g, Y_f, Y_g, name, dim_reduced, activation, layers_surrogate, neurons_surrogate, layers_AE, neurons_AE, lr, gamma, alpha, epochs, sequential, show=True, X_f_test=None, X_g_test=None, Y_f_test=None, Y_g_test=None):
 
@@ -241,7 +250,10 @@ def find_surrogate_reduced_correlated_models_invCDF(X_f, X_g, Y_f, Y_g, name, di
 
     return f_surrogate, model_f, g_surrogate, model_g, losses, save_data
 
+# ----------------------------------------------------------------------------------------
 # Load autoencoder and surrogate model from saved PyTorch files
+# For the case where HF and LF models were trained and saved together
+# ----------------------------------------------------------------------------------------
 
 def load_surrogate_reduced_correlated_models_invCDF(NN_model_path, dim_f, dim_g, dim_reduced, activation, layers_surrogate, neurons_surrogate, layers_AE, neurons_AE):
    
@@ -274,6 +286,10 @@ def load_surrogate_reduced_correlated_models_invCDF(NN_model_path, dim_f, dim_g,
     
     return f_surrogate, model_f, g_surrogate, model_g
 
+# ----------------------------------------------------------------------------------------
+# Load surrogate models and autoencoders from a file
+# ----------------------------------------------------------------------------------------
+
 def load_surrogate_reduced_model(NN_model_path, key, dim, dim_reduced, activation, layers_surrogate, neurons_surrogate, layers_AE, neurons_AE):
     
     # Initialize models
@@ -294,7 +310,9 @@ def load_surrogate_reduced_model(NN_model_path, key, dim, dim_reduced, activatio
 
     return surrogate, model 
 
+# ----------------------------------------------------------------------------------------
 # Hyperparameter tuning
+# ----------------------------------------------------------------------------------------
 
 def tune_hyperparameters(base_path, f_data, g_data, f_output, g_output, dim_reduced, activation, flow_type, layers_max, neurons_max, lr_min, lr_max, gamma_min, gamma_max, epochs, k_splits, max_evals, name, together, sequential, tune_alpha = False, show=True):
 
@@ -437,7 +455,9 @@ def tune_hyperparameters(base_path, f_data, g_data, f_output, g_output, dim_redu
     return hyperparameters
 
 
+# ----------------------------------------------------------------------------------------
 # Normalizing flow
+# ----------------------------------------------------------------------------------------
 
 def find_normalizing_flow(data, layers, neurons, epochs, name, lr, gamma, show=True, data_test=None):
 
@@ -501,6 +521,10 @@ def find_normalizing_flow(data, layers, neurons, epochs, name, lr, gamma, show=T
 
     return T, T_inverse, losses[1][-1]
 
+# ----------------------------------------------------------------------------------------
+# Find 1D normalizing flow
+# ----------------------------------------------------------------------------------------
+
 def find_normalizing_flow_1D(data, layers, neurons, epochs, name, lr, gamma, show=True, data_test=None):
 
     dist_base = nf.distributions.DiagGaussian(2)
@@ -563,6 +587,10 @@ def find_normalizing_flow_1D(data, layers, neurons, epochs, name, lr, gamma, sho
 
     return T, T_inverse, losses[1][-1]
 
+# ----------------------------------------------------------------------------------------
+# Find spline normalizing flow
+# ----------------------------------------------------------------------------------------
+
 def find_normalizing_flow_spline(data, epochs, name, lr, gamma, show=True, data_test=None):
 
     dim = data.shape[1]
@@ -619,6 +647,10 @@ def find_normalizing_flow_spline(data, epochs, name, lr, gamma, show=True, data_
 
     return T, T_inverse, losses[1][-1]
 
+# ----------------------------------------------------------------------------------------
+# Find inverse CDF normalizing flow
+# ----------------------------------------------------------------------------------------
+
 def find_normalizing_flow_invCDF(data):
     
     Finv = lambda a: torch.sort(data, dim=0)[0][(data.shape[0]*a).type(torch.int)]
@@ -629,7 +661,9 @@ def find_normalizing_flow_invCDF(data):
 
     return T, T_inverse
 
-# Functions to read data
+# ----------------------------------------------------------------------------------------
+# Functions to read data from JSON files
+# ----------------------------------------------------------------------------------------
 
 def read_data(mode, data_file, QoI_name = None, expected_samples = None, expected_data_fields = None):
     f = open(data_file)
@@ -665,15 +699,17 @@ def read_data(mode, data_file, QoI_name = None, expected_samples = None, expecte
     else:
         raise RuntimeError("ERROR: Invalid option for 'mode'. Should be 'simulations'/'parameters'.")
 
+# ----------------------------------------------------------------------------------------
+# Read specified simulation data/outputs and inputs
+# ----------------------------------------------------------------------------------------
+
 def read_simulation_data(QoI_LF_name, QoI_HF_name, parameters_LF_file, parameters_HF_file, all_LF_data_file, all_HF_data_file, parameters_file_propagation = None, pilot_AE_LF_data_file = None, prop_LF_data_file = None, prop_AE_LF_data_file = None):
 
-    #samples_params, param_names, parameters = read_data("parameters", parameters_file)
-    samples_params, param_names, parameters_LF = read_data("parameters", parameters_LF_file)
-    samples_params, param_names, parameters_HF = read_data("parameters", parameters_HF_file)
+    samples_params, param_names_LF, parameters_LF = read_data("parameters", parameters_LF_file)
+    samples_params, param_names_HF, parameters_HF = read_data("parameters", parameters_HF_file)
     samples_LF, data_fields_LF, QoI_LF = read_data("simulations", all_LF_data_file, QoI_LF_name)
     samples_HF, data_fields_HF, QoI_HF = read_data("simulations", all_HF_data_file, QoI_HF_name)
 
-    #num_params = len(param_names)
     num_samples_LF = len(samples_LF)
     num_samples_HF = len(samples_HF)
 
@@ -687,7 +723,7 @@ def read_simulation_data(QoI_LF_name, QoI_HF_name, parameters_LF_file, parameter
     parameters_HF = parameters_HF[0:num_samples,:]
 
     if (parameters_file_propagation):
-        samples_params_prop, param_names_prop, parameters_prop = read_data("parameters", parameters_file_propagation, None, None, param_names)
+        samples_params_prop, param_names_prop, parameters_prop = read_data("parameters", parameters_file_propagation, None, None, param_names_LF)
     else:
         parameters_prop = None
 
@@ -708,16 +744,19 @@ def read_simulation_data(QoI_LF_name, QoI_HF_name, parameters_LF_file, parameter
     
     return samples, parameters_LF, parameters_HF, QoI_LF, QoI_HF, parameters_prop, pilot_AE_QoI_LF, prop_QoI_LF, prop_AE_QoI_LF
 
+# ----------------------------------------------------------------------------------------
+# Normalize the inputs and outputs and save them
+# ----------------------------------------------------------------------------------------
+
 def write_normalized_data(base_path, data_files_json, QoI_LF_name, QoI_HF_name, num_pilot_samples_to_use, trial_name_str = ""):
 
     parameters_HF_file = data_files_json["HF_inputs"]
-    parameters_LF_file = data_files_json["HF_inputs"]
-    all_LF_data_file = data_files_json["LF_outputs_pilot"]
     all_HF_data_file = data_files_json["HF_outputs"]
+    parameters_LF_file = data_files_json["LF_inputs_pilot"]
+    all_LF_data_file = data_files_json["LF_outputs_pilot"]
     parameters_file_propagation = data_files_json["LF_inputs_propagation"]
 
     # Read data
-
     samples, parameters_LF, parameters_HF, QoI_LF, QoI_HF, parameters_propagation, _, _, _ = read_simulation_data(QoI_LF_name, QoI_HF_name, 
             parameters_LF_file, parameters_HF_file, all_LF_data_file, all_HF_data_file, parameters_file_propagation)
     num_params_LF = parameters_LF.shape[1]
@@ -732,23 +771,31 @@ def write_normalized_data(base_path, data_files_json, QoI_LF_name, QoI_HF_name, 
         parameters_LF = parameters_LF[sample_idxs,:]
         parameters_HF = parameters_HF[sample_idxs,:]
 
-    # Values parameters
+    # Read parameter limits from file
 
-    R_min = 0.5
-    R_max = 2.0
-
-    R_cor_min = 0.70
-    R_cor_max = 1.25
-
-    min_parameters_LF = np.array([R_min]*(num_params_LF-1))
-    min_parameters_LF = np.append(min_parameters_LF, R_cor_min)
-    max_parameters_LF = np.array([R_max]*(num_params_LF-1))
-    max_parameters_LF = np.append(max_parameters_LF, R_cor_max)
-
-    min_parameters_HF = np.array([R_min]*(num_params_HF-1))
-    min_parameters_HF = np.append(min_parameters_HF, R_cor_min)
-    max_parameters_HF = np.array([R_max]*(num_params_HF-1))
-    max_parameters_HF = np.append(max_parameters_HF, R_cor_max)
+    parameter_limits_LF_file = data_files_json["LF_inputs_limits"]
+    param_limit_keys, param_limit_names, parameter_limits_LF = read_data("parameters", parameter_limits_LF_file)
+    if (param_limit_keys[0] == "min" and param_limit_keys[1] == "max"):
+        min_parameters_LF = parameter_limits_LF[0,:]
+        max_parameters_LF = parameter_limits_LF[1,:]
+    elif (param_limit_keys[1] == "min" and param_limit_keys[0] == "max"):
+        min_parameters_LF = parameter_limits_LF[1,:]
+        max_parameters_LF = parameter_limits_LF[0,:]
+    else:
+        raise RuntimeError('File ' + parameter_limits_LF_file  + 'should have keys "max" and "min" with entries \
+                storing the maximum and minimum value of each parameter/input in the same format as ' + parameters_LF_file)
+    
+    parameter_limits_HF_file = data_files_json["HF_inputs_limits"]
+    param_limit_keys, param_limit_names, parameter_limits_HF = read_data("parameters", parameter_limits_HF_file)
+    if (param_limit_keys[0] == "min" and param_limit_keys[1] == "max"):
+        min_parameters_HF = parameter_limits_HF[0,:]
+        max_parameters_HF = parameter_limits_HF[1,:]
+    elif (param_limit_keys[1] == "min" and param_limit_keys[0] == "max"):
+        min_parameters_HF = parameter_limits_HF[1,:]
+        max_parameters_HF = parameter_limits_HF[0,:]
+    else:
+        raise RuntimeError('File ' + parameter_limits_HF_file  + 'should have keys "max" and "min" with entries \
+                storing the maximum and minimum value of each parameter/input in the same format as ' + parameters_HF_file)
 
     # Normalization
 
@@ -761,14 +808,31 @@ def write_normalized_data(base_path, data_files_json, QoI_LF_name, QoI_HF_name, 
     parameters_HF_normalized = np.empty(parameters_HF.shape)
     parameters_propagation_normalized = np.empty(parameters_propagation.shape)
     
-    # Normalize LF parameters
+    # Normalize LF parameters to [-1,1]
     for j in range(parameters_LF.shape[1]):
-        parameters_LF_normalized[:,j] = (2*parameters_LF[:,j] - min_parameters_LF[j] - max_parameters_LF[j])/(max_parameters_LF[j] - min_parameters_LF[j])
-        parameters_propagation_normalized[:,j] = (2*parameters_propagation[:,j] - min_parameters_LF[j] - max_parameters_LF[j])/(max_parameters_LF[j] - min_parameters_LF[j])
-    
-    # Normalize HF parameters
+        parameters_LF_normalized[:,j] = (2*parameters_LF[:,j] - min_parameters_LF[j] - max_parameters_LF[j])/\
+                (max_parameters_LF[j] - min_parameters_LF[j])
+        parameters_propagation_normalized[:,j] = (2*parameters_propagation[:,j] - min_parameters_LF[j] - max_parameters_LF[j])/\
+                (max_parameters_LF[j] - min_parameters_LF[j])
+        # Check that normalization is working
+        if (np.amax(parameters_LF_normalized[:,j]) > 1):
+            print("\nWARNING: LF input parameter with index " + str(j) + " has normalized value > 1 at sample " \
+                    + str(np.argmax(parameters_LF_normalized[:,j])) + ". The range should be [-1,1].")
+        if (np.amin(parameters_LF_normalized[:,j]) < -1):
+            print("\nWARNING: LF input parameter with index " + str(j) + " has normalized value < -1 at sample " \
+                    + str(np.argmin(parameters_LF_normalized[:,j])) + ". The range should be [-1,1].")
+
+    # Normalize HF parameters to [-1,1]
     for j in range(parameters_HF.shape[1]):
-        parameters_HF_normalized[:,j] = (2*parameters_HF[:,j] - min_parameters_HF[j] - max_parameters_HF[j])/(max_parameters_HF[j] - min_parameters_HF[j])
+        parameters_HF_normalized[:,j] = (2*parameters_HF[:,j] - min_parameters_HF[j] - max_parameters_HF[j])/\
+                (max_parameters_HF[j] - min_parameters_HF[j])
+        # Check that normalization is working
+        if (np.amax(parameters_HF_normalized[:,j]) > 1):
+            print("\nWARNING: HF input parameter with index " + str(j) + " has normalized value > 1 at sample " \
+                    + str(np.argmax(parameters_HF_normalized[:,j])) + ". The range should be [-1,1].")
+        if (np.amin(parameters_HF_normalized[:,j]) < -1):
+            print("\nWARNING: HF input parameter with index " + str(j) + " has normalized value < -1 at sample " \
+                    + str(np.argmin(parameters_HF_normalized[:,j])) + ". The range should be [-1,1].")
         
     QoI_HF_normalized = (2*QoI_HF - min_QoI_HF - max_QoI_HF)/(max_QoI_HF - min_QoI_HF)
     QoI_LF_normalized = (2*QoI_LF - min_QoI_LF - max_QoI_LF)/(max_QoI_LF - min_QoI_LF)
@@ -790,8 +854,11 @@ def write_normalized_data(base_path, data_files_json, QoI_LF_name, QoI_HF_name, 
     if num_pilot_samples_to_use != -1:
         np.savetxt(base_path + "/results/sample_idxs"+trial_name_str+".csv", sample_idxs, fmt='%i', delimiter=",")
 
+# ----------------------------------------------------------------------------------------
+# Un-normalize inputs and write to a file to use for new (resampled) simulations
+# ----------------------------------------------------------------------------------------
 
-def write_unnormalized_data(base_path, config_string, trial_name_str = ""):
+def write_unnormalized_data(base_path, data_files_json, config_string, trial_name_str = ""):
 
     base_path = os.path.abspath(base_path)
     new_parameters_normalized_file = base_path + "/results/new_parameters_LF_normalized_AE"+config_string+trial_name_str+".csv"
@@ -810,29 +877,29 @@ def write_unnormalized_data(base_path, config_string, trial_name_str = ""):
 
     new_parameters_LF_normalized_AE = np.genfromtxt(new_parameters_normalized_file, delimiter=',')
     new_parameters_prop_LF_normalized_AE = np.genfromtxt(new_parameters_propagation_normalized_file, delimiter=',')
+    
+    # Read parameter limits from file
 
-    # Values parameters
-
-    R_min = 0.5
-    R_max = 2.0
-
-    R_cor_min = 0.70
-    R_cor_max = 1.25
-
-    num_params = new_parameters_LF_normalized_AE.shape[1]
-    min_parameters = np.array([R_min]*(num_params-1))
-    min_parameters = np.append(min_parameters,R_cor_min)
-    max_parameters = np.array([R_max]*(num_params-1))
-    max_parameters = np.append(max_parameters,R_cor_max)
-
+    parameter_limits_LF_file = data_files_json["LF_inputs_limits"]
+    param_limit_keys, param_limit_names, parameter_limits_LF = read_data("parameters", parameter_limits_LF_file)
+    if (param_limit_keys[0] == "min" and param_limit_keys[1] == "max"):
+        min_parameters_LF = parameter_limits_LF[0,:]
+        max_parameters_LF = parameter_limits_LF[1,:]
+    elif (param_limit_keys[1] == "min" and param_limit_keys[0] == "max"):
+        min_parameters_LF = parameter_limits_LF[1,:]
+        max_parameters_LF = parameter_limits_LF[0,:]
+    else:
+        raise RuntimeError('File ' + parameter_limits_LF_file  + 'should have keys "max" and "min" with entries \
+                storing the maximum and minimum value of each parameter/input in the same format as ' + parameters_LF_file)
+    
     # Un-normalize parameters values
 
     new_parameters_LF_AE = np.empty(new_parameters_LF_normalized_AE.shape)
     new_parameters_prop_LF_AE = np.empty(new_parameters_prop_LF_normalized_AE.shape)
 
     for j in range(new_parameters_LF_AE.shape[1]):
-        new_parameters_LF_AE[:,j] = (min_parameters[j] + max_parameters[j] + (max_parameters[j] - min_parameters[j])*new_parameters_LF_normalized_AE[:,j])/2
-        new_parameters_prop_LF_AE[:,j] = (min_parameters[j] + max_parameters[j] + (max_parameters[j] - min_parameters[j])*new_parameters_prop_LF_normalized_AE[:,j])/2
+        new_parameters_LF_AE[:,j] = (min_parameters_LF[j] + max_parameters_LF[j] + (max_parameters_LF[j] - min_parameters_LF[j])*new_parameters_LF_normalized_AE[:,j])/2
+        new_parameters_prop_LF_AE[:,j] = (min_parameters_LF[j] + max_parameters_LF[j] + (max_parameters_LF[j] - min_parameters_LF[j])*new_parameters_prop_LF_normalized_AE[:,j])/2
 
     # Save
     np.savetxt(new_parameters_file, new_parameters_LF_AE, delimiter=",")

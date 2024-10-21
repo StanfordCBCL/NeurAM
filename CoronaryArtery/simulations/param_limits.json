@@ -1,0 +1,36 @@
+{
+    "min": {
+        "BC_lca1": 0.5,
+        "BC_lca10": 0.5,
+        "BC_lca2": 0.5,
+        "BC_lca3": 0.5,
+        "BC_lca4": 0.5,
+        "BC_lca5": 0.5,
+        "BC_lca6": 0.5,
+        "BC_lca7": 0.5,
+        "BC_lca8": 0.5,
+        "BC_lca9": 0.5,
+        "BC_rca1": 0.5,
+        "BC_rca5": 0.5,
+        "BC_rca6": 0.5,
+        "BC_rca7": 0.5,
+        "R_cor_scaling": 0.7
+    },
+    "max": {
+        "BC_lca1": 2.0,
+        "BC_lca10": 2.0,
+        "BC_lca2": 2.0,
+        "BC_lca3": 2.0,
+        "BC_lca4": 2.0,
+        "BC_lca5": 2.0,
+        "BC_lca6": 2.0,
+        "BC_lca7": 2.0,
+        "BC_lca8": 2.0,
+        "BC_lca9": 2.0,
+        "BC_rca1": 2.0,
+        "BC_rca5": 2.0,
+        "BC_rca6": 2.0,
+        "BC_rca7": 2.0,
+        "R_cor_scaling": 1.25
+    }
+}

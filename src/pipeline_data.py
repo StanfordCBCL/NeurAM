@@ -29,7 +29,7 @@ def run_using_data(config):
     # True OR False OR filename with tuned hyperparameters
     hyperparameter_tuning = read_json_entry(config, "hyperparameter_tuning", False)
     # Number of epochs for training
-    epochs = read_json_entry(config, "epochs")
+    epochs = read_json_entry(config, "epochs", 10000)
     
     # Path to simulation data
     data_files_json = config["model"]["data_files"]
@@ -113,8 +113,6 @@ def run_using_data(config):
         write_normalized_data(base_path, data_files_json, QoI_LF_name, QoI_HF_name, num_pilot_samples_to_use, trial_idx_str)
 
         # Read data
-#       f_data = torch.from_numpy(np.genfromtxt(base_path + "/results/parameters_normalized"+trial_idx_str+".csv", delimiter=','))
-#       g_data = torch.from_numpy(np.genfromtxt(base_path + "/results/parameters_normalized"+trial_idx_str+".csv", delimiter=','))
         f_data = torch.from_numpy(np.genfromtxt(base_path + "/results/parameters_HF_normalized"+trial_idx_str+".csv", delimiter=','))
         g_data = torch.from_numpy(np.genfromtxt(base_path + "/results/parameters_LF_normalized"+trial_idx_str+".csv", delimiter=','))
         f_output = torch.from_numpy(np.genfromtxt(base_path + "/results/QoI_HF_normalized"+trial_idx_str+".csv", delimiter=','))
@@ -327,7 +325,7 @@ def run_using_data(config):
                     data_g_reduced_propagation, delimiter=",")
             
             # Un-normalize resampled inputs
-            write_unnormalized_data(base_path, config_string, trial_idx_str)
+            write_unnormalized_data(base_path, data_files_json, config_string, trial_idx_str)
 
             # Save autoencoders and surrogate models
             if not load_NN_models:
