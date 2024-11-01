@@ -16,6 +16,8 @@ neuram <path_to_input.json>
 }
 ```
 
-| Parameter | Description |
-| _________ | ___________ |
-| `type` | Type of data |
+| Parameter    | Description | Required or optional (default value) |
+| -------- | ------- | ------- |
+| `model_type`  | Type of data    | Required |
+| `number_of_iterations` | Number of independent trials to perform in constructing the shared space and surrogate models | 1 |
+| `epochs`   | Number of epochs to train the autencoders and surrogate models | 10000 |
