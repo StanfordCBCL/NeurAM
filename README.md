@@ -18,7 +18,9 @@ This package uses a `.json` input file with the following format to specify the 
     "random_seed" : 2025,
     "save" : true,
     "hyperparameter_tuning" : "hyperparameters.txt",
-    "model" : { ... }
+    "model" : { 
+        "Details provided below" 
+    }
 }
 ```
 
@@ -36,7 +38,7 @@ This package uses a `.json` input file with the following format to specify the 
 ### The `model` block for models of type `"function"`
 
 ```json
-{   ...,
+{   
     "model" : {
         "model_path" : "./",
         "number_of_training_samples" : 1000,
@@ -51,7 +53,7 @@ This package uses a `.json` input file with the following format to specify the 
 ### The `model` block for models of type `"data"`
 
 ```json
-{   ...,
+{   
     "model" : {
         "HF_QoI_name" : "max_osi_sten_lad",
         "LF_QoI_name" : "mean_flow:lca1:BC_lca1",
