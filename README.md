@@ -84,3 +84,20 @@ A sample `"model"` block is provided below:
     }
 }
 ```
+| Parameter    | Format | Description |
+| -------- | ------- | ------- |
+| `"HF_QoI_name"` | String | Name of the high-fidelity QoI. This should be a valid argument for `name` in `get_model(name)`. |
+| `"LF_QoI_name"` | String | Name of the low-fidelity QoI. This should be a valid argument for `name` in `get_model(name)`. |
+| `"cost_ratio"` | Float | Ratio of computational cost between low- and high-fidelity model evaluations. |
+|`"HF_inputs"` | String | Path to the `.json` file containing the input parameters for the high-fidelity model. |
+|`"HF_outputs"` | String | Path to the `.json` file containing the output QoIs for the high-fidelity model. |
+|`"LF_inputs_pilot"` | String | Path to the `.json` file containing the pilot samples' input parameters for the low-fidelity model. These samples are used to construct the low-dimensional manifold and surrogate models.|
+|`"LF_outputs_pilot"` | String | Path to the `.json` file containing the pilot samples' output QoIs for the low-fidelity model. These samples are used to construct the low-dimensional manifold and sur    rogate models.|
+|`"LF_inputs_propagation"` | String | Path to the `.json` file containing the pilot samples' input parameters for the low-fidelity model. These samples are used to perform multi-fidelity uncertainty quantification. |
+|`"LF_outputs_propagation"` | String | Path to the `.json` file containing the pilot samples' output QoIs for the low-fidelity model. These samples are used to perform multi-fidelity uncertainty quant    ification. |
+|`"LF_outputs_pilot_AE"` | String | Path to the `.json` file containing the output QoIs for the low-fidelity model after resampling the original pilot samples' inputs (which were in `"LF_inputs_pilot"`) via the active manifold. These samples are used to perform the improved multi-fidelity uncertainty quantification with improved correlation between low- and high-fidelity models. |
+|`"LF_outputs_propagation_AE"` | String | Path to the `.json` file containing the output QoIs for the low-fidelity model after resampling the original propagation samples' inputs (which were in `"LF_inputs_propagation"`) via the active manifold. These samples are used to perform the improved multi-fidelity uncertainty quantification with improved correlation between low- and high-fidelity models. |
+| `"LF_inputs_limits"` | String | Path to the `.json` file containing the upper and lower bounds for each input parameter for the low-fidelity model. This is required to scale the inputs in the range [-1,1]. |
+| `"HF_inputs_limits"` | String | Path to the `.json` file containing the upper and lower bounds for each input parameter for the high-fidelity model. This is required to scale the inputs in the range [-1,1]. |
+
+Note: For the format of the `.json` files storing the inputs and outputs, please look at the `CoronaryArtery` example.
