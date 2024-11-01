@@ -5,7 +5,7 @@ dependencies:
   - python=3.10
   - pandas
   - pytorch
-  - optuna
+  - conda-forge::optuna
   - matplotlib
   - scikit-learn
   - torchmetrics
