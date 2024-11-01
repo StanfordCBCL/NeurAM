@@ -37,18 +37,27 @@ This package uses a `.json` input file with the following format to specify the 
 
 ### The `model` block for models of type `"function"`
 
+A sample `"model"` block is provided below:
 ```json
 {   
     "model" : {
+        "HF_QoI_name" : "HF_QoI",
+        "LF_QoI_name" : "LF_QoI",
+        "cost_ratio" : 0.01,
         "model_path" : "./",
         "number_of_training_samples" : 1000,
-        "number_of_testing_samples" : 1000,
-        "HF_QoI_name" : "Q_HF",
-        "LF_QoI_name" : "Q_LF",
-        "cost_ratio" : 0.01
+        "number_of_testing_samples" : 1000
     }
 }
 ```
+| Parameter    | Format | Description |
+| -------- | ------- | ------- |
+| `"HF_QoI_name"` | String | Name of the high-fidelity QoI. This should be a valid argument for `name` in `get_model(name)`. |
+| `"LF_QoI_name"` | String | Name of the low-fidelity QoI. This should be a valid argument for `name` in `get_model(name)`. |
+| `"cost_ratio"` | Float | Ratio of computational cost between low- and high-fidelity model evaluations. |
+| `"model_path"` | String | Path to the directory containing `model.py` |
+| `"number_of_training_samples"` | Integer | Number of samples to draw for training the autoencoders and surrogate models. |
+| `"number_of_testing_samples"` | Integer | Number of samples to draw for testing the autoencoders and surrogate models. |
 
 ### The `model` block for models of type `"data"`
 
