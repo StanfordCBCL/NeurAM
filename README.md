@@ -5,12 +5,27 @@
 
 ## Installation
 
+To install the dependencies in a conda enviroment, run the following:
+```
+conda env create -f environment.yml
+```
+
+Activate the environment as follows:
+``` 
+conda activate neuram
+```
+
 ## Usage
 
 ```
-neuram <path_to_input.json>
+python src/main.py <path_to_input_file.json>
 ```
 
+<!---
+```
+neuram <path_to_input_file.json>
+```
+-->
 ## Modes of operation
 
 The construction of the active manifold for a given set of low- and high-fidelity models can be performed in two ways:
