@@ -1,0 +1,12 @@
+name: neuram
+channels:
+  - defaults
+dependencies:
+  - python=3.10
+  - pandas
+  - pytorch
+  - optuna
+  - matplotlib
+  - scikit-learn
+  - torchmetrics
+prefix: /home/karthik/miniconda3/envs/mfmc
